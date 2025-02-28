@@ -1,0 +1,5 @@
+<engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <engine:Button text="Import an STL file..." name="ImportButton" />
+    <Assets.SelectorListControl name="SelectorListControl" style="flex-shrink: 0; flex-grow: 1; overflow: hidden; background-color: rgb(176, 176, 176); max-height: 30%;" />
+    <Assets.TransformsControl name="transforms" style="flex-shrink: 0; flex-grow: 0; bottom: 0;" />
+</engine:UXML>
