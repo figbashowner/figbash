@@ -3,6 +3,7 @@ import json
 import bpy
 import sys
 import math
+from mathutils import Euler, Matrix
 import os
 from pathlib import Path
 
@@ -129,6 +130,7 @@ def  remesh_object(obj_base, keep):
     bpy.ops.object.modifier_apply(modifier=('mod' + str(modIndex)))
   #myPrint("modifier applied" + apply_obj.name)
 
+#note from ben: this would be easier if you decomposed your code into smaller reusable functions
 def handle_one_json_child(stlfile, combining = False, keep = False):
     #print(stlfile["FullPath"])
     #print(stlfile["ClearToApplyFullPath"])
@@ -150,9 +152,9 @@ def handle_one_json_child(stlfile, combining = False, keep = False):
         apply_all_transforms(obj_base)
 
     if "transforms" in stlfile and "Rotations" in stlfile["transforms"] and len(stlfile["transforms"]["Rotations"]) > 0:
-        bpy.ops.transform.rotate(value=math.radians(stlfile["transforms"]["Rotations"][0]), orient_axis='Y')
         bpy.ops.transform.rotate(value=math.radians(stlfile["transforms"]["Rotations"][1]), orient_axis='Z')
         bpy.ops.transform.rotate(value=math.radians(stlfile["transforms"]["Rotations"][2]), orient_axis='X')
+        bpy.ops.transform.rotate(value=math.radians(stlfile["transforms"]["Rotations"][0] * -1), orient_axis='Y')
         apply_all_transforms(obj_base)
 
     if newPosition is not None:
@@ -261,6 +263,7 @@ if command == "exportAll":
                     #myPrint(os.path.join(subdir, Path(file).stem))
                     export_from_one_blend_file(sourcefile, os.path.join(outputdir, Path(file).stem) )
                     Path(breadcrumbfile).touch()
+    
 
 elif command == "applyClearJson":
     jsonfile = sys.argv[2]
@@ -297,23 +300,31 @@ elif command == "combineAllJson":
             apply_cut(primary_obj, obj_base, isCut = False, keep = keep)
         primary_obj.select_set(True)
 
-    bpy.ops.object.select_all(action = 'DESELECT')
-    if "CutsFileFullPath" in data and data["CutsFileFullPath"] is not None:
-        bpy.ops.import_mesh.stl(filepath = data["CutsFileFullPath"])
-        obj_cuts = bpy.context.selected_objects[0]
-        apply_cut(primary_obj, obj_cuts, isCut=True, keep=keep)
+    for cuts in data["cutConfigs"]:
+        bpy.ops.object.select_all(action = 'DESELECT')
+        primary_obj.select_set(True)
+        bpy.ops.object.duplicate()
+        obj_target = bpy.context.selected_objects[0]
+        if "CutsFileFullPath" in cuts and cuts["CutsFileFullPath"] is not None:
+            bpy.ops.import_mesh.stl(filepath = cuts["CutsFileFullPath"])
+            obj_cuts = bpy.context.selected_objects[0]
+            apply_cut(obj_target, obj_cuts, isCut=True, keep=keep)
 
-    bpy.ops.object.select_all(action = 'DESELECT')
-    file_out = sys.argv[len(sys.argv) - 1]
-    myPrint("outputting to " + file_out)
-    primary_obj.select_set(True)
-    if keep == True:
-        bpy.ops.wm.save_as_mainfile(filepath=file_out + '.blend')
+        bpy.ops.object.select_all(action = 'DESELECT')
+        
+        file_out = sys.argv[len(sys.argv) - 1]
+        if "OutputFileFullPath" in cuts and cuts["OutputFileFullPath"] is not None:
+            file_out = cuts["OutputFileFullPath"]
 
-    if "ScaleFactor" in data and data["ScaleFactor"] is not None:
-        scale = data["ScaleFactor"]
-        myPrint("scaling output by " + str(scale))
-        primary_obj.scale = scale, scale, scale
-    primary_obj.rotation_euler[0] = math.radians(270)
-    bpy.ops.export_mesh.stl(filepath = file_out,
-                            use_selection=True)
+        myPrint("outputting to " + file_out)
+        obj_target.select_set(True)
+        if keep == True:
+            bpy.ops.wm.save_as_mainfile(filepath=file_out + '.blend')
+
+        if "ScaleFactor" in cuts and cuts["ScaleFactor"] is not None:
+            scale = cuts["ScaleFactor"]
+            myPrint("scaling output by " + str(scale))
+            obj_target.scale = scale, scale, scale
+        obj_target.rotation_euler[0] = math.radians(270)
+        bpy.ops.export_mesh.stl(filepath = file_out,
+                                use_selection=True)

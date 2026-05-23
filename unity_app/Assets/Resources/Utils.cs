@@ -34,12 +34,5 @@ namespace Assets
         {
             return (value / 100) * baseSize;
         }
-        public static float GetEntryValue(TextField t)
-        {
-            float v = 0f;
-            float.TryParse(t.value, out v);
-            return v;
-        }
-
     }
 }

@@ -10,11 +10,16 @@ using Unity.VisualScripting;
 using System.Net.Http.Headers;
 using UnityEngine;
 using Unity.Properties;
+using Newtonsoft.Json;
 
 namespace Assets
 {
     internal class DataManager 
     {
+        private class Repository
+        {
+            public string Url;
+        }
         private static readonly DataManager _instance= new DataManager();
 
         public static DataManager Instance
@@ -31,11 +36,20 @@ namespace Assets
         public List<ITreeItem> AllClears { get; private set; } = new List<ITreeItem>();
         public List<StlFile> AllApplied { get; private set; } = new List<StlFile>();
 
+
         private DataManager() { }
         
-        public static List<string> hiddenFiles = new List<string>() { "base.stl", "cuts_2.75_0.25.stl", "cuts_2.75_0.30.stl", "cuts_2.75_0.35.stl", "cuts_3.75_0.25.stl", "cuts_3.75_0.30.stl", "cuts_3.75_0.35.stl", "cuts_6_0.25.stl", "cuts_6_0.30.stl", "cuts_6_0.35.stl" };
+        public static List<string> hiddenFiles = new List<string>() 
+        { 
+            "base.stl"
+            , "cuts_2.75_0.25.stl"
+            , "cuts_3.75_0.25.stl", "cuts_3.75_0.30.stl", "cuts_3.75_0.35.stl"
+            , "cuts_6_0.25.stl", "cuts_6_0.30.stl", "cuts_6_0.35.stl"
+            , "cuts_9_0.25.stl", "cuts_9_0.30.stl", "cuts_9_0.35.stl" 
+        };
 
         public void Load(string path)
+
         {
             int id = 0;
             StlTree = GetFolderList(path, ref id);
@@ -75,8 +89,23 @@ namespace Assets
             }
             return allChildren;
         }
-
-
+        /*
+        private static convertStlFileToTreeItemView(ITreeItem item, ref int id)
+        {
+            if (item as StlFile)
+            {
+                return new TreeViewItemData<ITreeItem>(++id, new Folder()
+                {
+                    Name = item.Name,
+                    FullPath = item.FullPath,
+                };
+            }
+            else if (item is Folder)
+            {
+                return;
+            }
+        }
+        */
         public static List<ITreeItem> GetClears(string path)
         {
             List<ITreeItem> allChildren = new List<ITreeItem>();
@@ -183,6 +212,16 @@ namespace Assets
         {
             AllApplied.Clear();
             NotifiyAppliedChanged();
+        }
+
+        internal void AddRepo(string url, string text)
+        {
+//            StlTree.Add(JsonConvert.DeserializeObject<Folder>(text));
+            if (OnDataChanged != null)
+                OnDataChanged();
+            //JsonUtility.FromJson<Folder>(text);
+            int tmp = 4;
+
         }
     }
 }

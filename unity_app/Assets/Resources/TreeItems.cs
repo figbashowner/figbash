@@ -9,18 +9,12 @@ using UnityEngine;
 namespace Assets
 {
 
-    public interface ITreeItem
+    public class ITreeItem
     {
         public int TreeIndex { get; set; }
-        public string Name
-        {
-            get;
-        }
+        public string Name;
 
-        public string FullPath
-        {
-            get;
-        }
+        public string FullPath;
 
         public bool Selected
         {
@@ -29,6 +23,7 @@ namespace Assets
         public bool SelectionCanChange
         {
             get;
+            set;
         }
         public bool IsImport
         {
@@ -37,29 +32,33 @@ namespace Assets
         }
 
     }
-
+    
+    [System.Serializable]
     public class Folder : ITreeItem
     {
-        public int TreeIndex { get; set; }
-        public string Name { get; set; }
-        public string FullPath { get; set; }
-        public bool Selected { get; set; }
-        public bool SelectionCanChange { get => false; }
-        public bool IsImport { get => false; set { } }
+        public Folder()
+        {
+            IsImport = false;
+            SelectionCanChange = false;
+            Selected = false;
+        }
+        public List<Folder> Subdirs = new List<Folder>();
+        public List<StlFile> Files = new List<StlFile>();
     }
-
+    
+    [System.Serializable]
     public class StlFile : ITreeItem
     {
-        public int TreeIndex { get; set; }
-        public string Name { get; set; }
-        public string FullPath { get; set; }
+        public StlFile()
+        {
+            Selected = false;
+            IsImport = false;
+        }
         public Vector3 originalSize { get; set; }
         public string AfterClearsAppliedFullPath { get; set; }
         public bool IsClear => FullPath.ContainsInsensitive("clear");
-        public bool Selected { get; set; } = false;
-        public bool SelectionCanChange { get; set; }
         public string ClearToApply { get; set; }
-        public bool IsImport { get; set; } = false;
+
         public Transforms Transforms { get; set; }
 
         public Guid Guid = Guid.NewGuid();
@@ -88,11 +87,19 @@ namespace Assets
             };
         }
     }
+    [Serializable]
+    public class CutConfig
+    {
+        public string CutsFileFullPath = "";
+        public string OutputFileFullPath = "";
+        public double ScaleFactor = 1.0f;
+    }
 
     [Serializable]
     public class ExportFile
     {
         public bool keep = false;
+        public CutConfig[] cutConfigs = null;
         public string CutsFileFullPath = "";
         public double ScaleFactor = 1.0f;
         public BareMinimumStlFile[] children;

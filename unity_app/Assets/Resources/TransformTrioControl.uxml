@@ -3,9 +3,9 @@
         <engine:Label text="Label" name="description" parse-escape-sequences="true" style="flex-wrap: wrap;" />
         <engine:Toggle label="Uniform" name="uniformToggle" />
         <engine:VisualElement style="flex-grow: 1;">
-            <engine:TextField label="Back to Front" name="BackToFront" />
-            <engine:TextField label="Down to Up" name="DownToUp" />
-            <engine:TextField label="Left to Right" name="LeftToRight" />
+            <engine:FloatField label="Back to Front" name="BackToFront" keyboard-type="NumberPad" />
+            <engine:FloatField label="Down to Up" name="DownToUp" keyboard-type="NumberPad" />
+            <engine:FloatField label="Left to Right" name="LeftToRight" keyboard-type="NumberPad" />
         </engine:VisualElement>
     </engine:VisualElement>
 </engine:UXML>

@@ -24,9 +24,9 @@ namespace Assets
         public delegate void TransformsChanged(TransformTrioControl sender, Vector3 newValues);
         public event TransformsChanged OnTransfromsChanged;
 
-        private TextField _backToFront;
-        private TextField _downToUp;
-        private TextField _leftToRight;
+        private FloatField _backToFront;
+        private FloatField _downToUp;
+        private FloatField _leftToRight;
         private Label _descriptionLabel;
         private Toggle _uniformToggle;
 
@@ -90,26 +90,36 @@ namespace Assets
                 }
             });
             
-            _backToFront = this.Q<TextField>("BackToFront");
-            _downToUp = this.Q<TextField>("DownToUp");
-            _leftToRight = this.Q<TextField>("LeftToRight");
+            _backToFront = this.Q<FloatField>("BackToFront");
+            _downToUp = this.Q<FloatField>("DownToUp");
+            _leftToRight = this.Q<FloatField>("LeftToRight");
+            var setupFF = new Action<FloatField>((ff) =>
+            {
+                ff.SetRangeValidation(-1000, 1000);
+                ff.RegisterValueChangedCallback(TransformEntryChanged);
 
-            _backToFront.RegisterCallback<FocusOutEvent>(TransformEntryChanged);
-            _downToUp.RegisterCallback<FocusOutEvent>(TransformEntryChanged);
-            _leftToRight.RegisterCallback<FocusOutEvent>(TransformEntryChanged);
+            });
+            setupFF(_backToFront);
+            setupFF(_downToUp);
+            setupFF(_leftToRight); 
         }
 
-        private void TransformEntryChanged(FocusOutEvent evt)
+        private void TransformEntryChanged(ChangeEvent<float> evt)
         {
             if (_uniformToggle.value)
             {
-                var tf = evt.target as TextElement;
-                _backToFront.SetValueWithoutNotify(tf.text);
-                _downToUp.SetValueWithoutNotify(tf.text);
-                _leftToRight.SetValueWithoutNotify(tf.text);
+                var tf = evt.target as FloatField;
+                if (tf != null)
+                {
+                    _backToFront.SetValueWithoutNotify(tf.value);
+                    _downToUp.SetValueWithoutNotify(tf.value);
+                    _leftToRight.SetValueWithoutNotify(tf.value);
+
+                }
             }
             Notify();
         }
+
         private void Notify()
         {
             if (OnTransfromsChanged != null)
@@ -122,31 +132,59 @@ namespace Assets
         }
         public float GetTransformValue(Axis axis) 
         {
-            TextField chosen = null;
+            FloatField chosen = null;
             switch (axis) 
             {
                 case Axis.BackToFront: chosen = _backToFront; break;
                 case Axis.DownToUp: chosen = _downToUp; break;
                 case Axis.LeftToRight: chosen = _leftToRight; break;
             }
-            return Utils.GetEntryValue(chosen);
+            return chosen.value;
         }
 
         public void SetTransformValue(Axis axis, float value)
         {
-            TextField chosen = null;
+            FloatField chosen = null;
             switch (axis)
             {
                 case Axis.BackToFront: chosen = _backToFront; break;
                 case Axis.DownToUp: chosen = _downToUp; break;
                 case Axis.LeftToRight: chosen = _leftToRight; break;
             }
-            chosen.SetValueWithoutNotify(value.ToString());
+            chosen.SetValueWithoutNotify(value);
         }
 
         internal float[] GetTransformValues()
         {
             return new float[] { GetTransformValue(Axis.BackToFront), GetTransformValue(Axis.DownToUp), GetTransformValue(Axis.LeftToRight) };
         }
+    }
+}
+
+
+public static class FloatRangeExtension
+{
+    public static void SetRangeValidation(this FloatField ff, float minValue, float maxValue)
+    {
+        ff.RegisterCallback<ChangeEvent<float>>((evt) =>
+        {
+            if (evt.target == ff)
+            {
+                var validValue = Mathf.Clamp(evt.newValue, minValue, maxValue);
+
+                if (!Mathf.Approximately(validValue, evt.newValue))
+                {
+                    Debug.Log($"Value {evt.newValue} is out of range");
+                    evt.StopImmediatePropagation(); //we cancel the event notification
+                    evt.PreventDefault(); // might be needed if running Unity 2022.3 and below
+                    ff.value = validValue; //which will trigger another ChangeEvent to be dispatched
+                }
+                else
+                {
+                    Debug.Log($"Value {evt.newValue} is valid!");
+                }
+            }
+
+        }, TrickleDown.TrickleDown);  //TrickleDown phase is key here
     }
 }

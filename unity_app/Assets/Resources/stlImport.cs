@@ -42,22 +42,22 @@ public class stlImport : MonoBehaviour
         var exportFile = new ExportFile() { children = new List<BareMinimumStlFile>() { stlFile.Export() }.ToArray() };
         var output = JsonUtility.ToJson(exportFile);
         File.WriteAllText(tempFile, output);
-        executeApplyClearJsonScript($"{tempFile} {stlFile.AfterClearsAppliedFullPath}", logCallback);
+        executeApplyClearJsonScript($"\"{tempFile}\" \"{stlFile.AfterClearsAppliedFullPath}\"", logCallback);
     }
     public static void ApplyClear(string baseFullPath, string clearFullPath, string outputFullPath, Action<string> logCallback)
     {
-        executeApplyClearScript($"{baseFullPath} {clearFullPath} {outputFullPath}", logCallback);
+        executeApplyClearScript($"\"{baseFullPath}\" \"{clearFullPath}\" \"{outputFullPath}\"", logCallback);
     }
 
     public static void CreateFinalFigure(string jsonExportFile, string outputFile, Action<string> logCallback)
     {
-        executeCombineAllJsonScript($" {jsonExportFile} \"{outputFile}\"", logCallback);
+        executeCombineAllJsonScript($"\"{jsonExportFile}\" \"{outputFile}\"", logCallback);
     }
 //    private static List<string> hiddenFiles = new List<string>() { "base.stl", "cuts_0.16.stl", "cuts_0.20.stl", "cuts_0.25.stl", "cuts_0.30.stl", "cuts_0.35.stl" };
 
     public static void ExportStlsFromBlender(string outputFullPath, Action<string> logCallback)
     {
-        executeExportAllScript($"{Application.streamingAssetsPath} {outputFullPath}", logCallback);
+        executeExportAllScript($"\"{Application.streamingAssetsPath}\" \"{outputFullPath}\"", logCallback);
         foreach (var file in DataManager.hiddenFiles)
         {
             File.Copy(Path.Combine(Application.streamingAssetsPath, file), Path.Combine(outputFullPath, file), true);

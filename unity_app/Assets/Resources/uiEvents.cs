@@ -30,7 +30,12 @@ public class uiEvents : MonoBehaviour
     private ImportTab _impotTab;
     private RadioButtonGroup _toleranceRadio;
     private RadioButtonGroup _sizeRadio;
+    private Toggle _two;
+    private Toggle _three;
+    private Toggle _six;
+    private Toggle _nine;
     private VisualElement _toleranceDialog;
+    private Button _cancel;
     private SelectorTab _allSelectorTab;
     private TabView _tabView;
     private Button _showOutputButton;
@@ -158,8 +163,12 @@ public class uiEvents : MonoBehaviour
         _loadButton = root.Q<Button>("LoadFigure");
         _impotTab = root.Q<ImportTab>("ImportTabControl");
         _toleranceRadio = root.Q<RadioButtonGroup>("ToleranceRadio");
-        _sizeRadio = root.Q<RadioButtonGroup>("SizeRadio");
+        _two = root.Q<Toggle>("Two");
+        _three = root.Q<Toggle>("Three");
+        _six = root.Q<Toggle>("Six");
+        _nine = root.Q<Toggle>("Nine");
         _toleranceDialog = root.Q<VisualElement>("Modal1");
+        _cancel = root.Q<Button>("Cancel");
         _allSelectorTab = root.Q<SelectorTab>("AllSelectorTab");
         _tabView = root.Q<TabView>("tabView");
         _tabView.activeTabChanged += _tabView_activeTabChanged;
@@ -185,11 +194,7 @@ public class uiEvents : MonoBehaviour
 
         var openModalButton = root.Q<Button>("OpenModalButton");
         openModalButton.RegisterCallback<ClickEvent>(e => OnOpenModal());
-        _toleranceDialog.RegisterCallback<PointerDownEvent>((e) =>
-        {
-            e.StopImmediatePropagation();
-            CloseModal();
-        });
+       
 
         Directory.CreateDirectory(folderRoot);
         await RunInBackground(() =>
@@ -203,6 +208,11 @@ public class uiEvents : MonoBehaviour
         _exitButton.RegisterCallback<ClickEvent>(e =>
         {
             Application.Quit();
+        });
+
+        _cancel.RegisterCallback<ClickEvent>(e =>
+        {
+            _toleranceDialog.style.display = DisplayStyle.None;
         });
         /*
         _progress.value = 0;
@@ -333,23 +343,16 @@ public class uiEvents : MonoBehaviour
 
         var export = getExports();
        
-        var cutsFileName = "";
-        var sixinch = _sizeRadio.value == 2;
-        var twoinch = _sizeRadio.value == 0;
-        var sizeString = _sizeRadio.value switch
+        var sixinch = _six.value;
+        var nineinch = _nine.value;
+        var twoinch = _two.value;
+        var threeinch = _three.value;
+        List<CutConfig> cuts = new List<CutConfig>();
+        Func<string, string, string> createCutsFilePath = (sizeString, toleranceString) =>
         {
-            0 => "2.75",
-            1 => "3.75",
-            2 => "6",
-            _ => "WHAA"
+            return Path.Combine(folderRoot, $"cuts_{sizeString}_{toleranceString}.stl");
         };
-        var postScale = _sizeRadio.value switch
-        {
-            0 => 0.7333333,
-            1 => 1.0,
-            2 => 1.6,
-            _ => 1
-        };
+
         var toleranceString = _toleranceRadio.value switch
         {
             0 => "0.25",
@@ -357,22 +360,54 @@ public class uiEvents : MonoBehaviour
             2 => "0.35",
             _ => "WHAA"
         };
-        cutsFileName = $"cuts_{sizeString}_{toleranceString}.stl";
+
+        Action<string, double> addCut = (sizeString, scaleFactor) =>
+        {
+            cuts.Add(new CutConfig()
+            {
+                CutsFileFullPath = createCutsFilePath(sizeString, toleranceString),
+                ScaleFactor = scaleFactor
+            });
+        };
+
         
-        var tolerance = Path.GetFileNameWithoutExtension(cutsFileName).Substring(4);
-        var newFileName = $"{lastFileName}_{sizeString}in_{tolerance}";
+        if (twoinch)
+        {
+            if (toleranceString == "0.25")
+                addCut("2.75", 0.7333333);
+        }
+        if (threeinch)
+        {
+            addCut("3.75", 1);
+        }
+        if (sixinch)
+        {
+            addCut("6", 1.6);
+        }
+        if (nineinch)
+        {
+            addCut("9", 2.4);
+        }
+
+        var newFileName = $"{lastFileName}";
         var path = StandaloneFileBrowser.SaveFilePanel(
           "Save figure",
           previousFolder,
           newFileName + ".stl",
           "stl");
 
+        
         if (path.Length != 0)
         {
-            var tempFile = $"{uiEvents.tempClearsPath}/{lastFileName}_{sizeString}in_{tolerance}.json";
+            foreach (var cut in cuts)
+            {
+                cut.OutputFileFullPath = Path.Combine(Path.GetDirectoryName(path), 
+                                                    Path.GetFileNameWithoutExtension(path) 
+                                                    + Path.GetFileName(cut.CutsFileFullPath).Substring(4));
+            }
+            var tempFile = $"{uiEvents.tempClearsPath}/{lastFileName}_{toleranceString}.json";
             var exportFile = new ExportFile() { children = export.ToArray() };
-            exportFile.CutsFileFullPath = Path.Combine(folderRoot, cutsFileName);
-            exportFile.ScaleFactor = postScale;
+            exportFile.cutConfigs = cuts.ToArray();
 
             var output = JsonUtility.ToJson(exportFile);
             File.WriteAllText(tempFile, output);
