@@ -1,8 +1,9 @@
 <engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <engine:VisualElement style="flex-grow: 1; border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px; border-top-left-radius: 2px; border-top-right-radius: 2px; border-bottom-right-radius: 2px; border-bottom-left-radius: 2px; background-color: rgb(176, 176, 176);">
+    <Style src="project://database/Assets/UI%20Toolkit/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=685fb82c6889f484490d2de1aba5fab5&amp;type=3#Styles" />
+    <engine:VisualElement class="panel-card transform-trio" style="flex-grow: 1;">
         <engine:Label text="Label" name="description" parse-escape-sequences="true" style="flex-wrap: wrap;" />
         <engine:Toggle label="Uniform" name="uniformToggle" />
-        <engine:VisualElement style="flex-grow: 1;">
+        <engine:VisualElement class="transform-fields" style="flex-grow: 1;">
             <engine:FloatField label="Back to Front" name="BackToFront" keyboard-type="NumberPad" />
             <engine:FloatField label="Down to Up" name="DownToUp" keyboard-type="NumberPad" />
             <engine:FloatField label="Left to Right" name="LeftToRight" keyboard-type="NumberPad" />

@@ -21,21 +21,13 @@ public class uiEvents : MonoBehaviour
     private MultiColumnTreeView _tree;
     private TextField _outputTextField;
     private ProgressBar _progress;
-    private Button _generateButton;
     private Button _saveButton;
     public static string previousFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
     public static string previousFolderStl = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer);
     private List<string> outputStrings = new List<string>();
     private Button _loadButton;
     private ImportTab _impotTab;
-    private RadioButtonGroup _toleranceRadio;
-    private RadioButtonGroup _sizeRadio;
-    private Toggle _two;
-    private Toggle _three;
-    private Toggle _six;
-    private Toggle _nine;
-    private VisualElement _toleranceDialog;
-    private Button _cancel;
+    private GenerateFigureDialog _generateFigureDialog;
     private SelectorTab _allSelectorTab;
     private TabView _tabView;
     private Button _showOutputButton;
@@ -129,8 +121,20 @@ public class uiEvents : MonoBehaviour
         }
     }
 
-    public static string folderRoot = Path.Combine(Path.GetTempPath(), "action_figure_builder"); 
-    public static string tempClearsPath = Path.Combine(Path.GetTempPath(), "action_figure_builder/tempClears"); 
+    public static string folderRoot { get; private set; }
+    public static string tempClearsPath { get; private set; }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void InitializeStoragePaths()
+    {
+        if (!string.IsNullOrWhiteSpace(folderRoot) && !string.IsNullOrWhiteSpace(tempClearsPath))
+            return;
+
+        folderRoot = Application.persistentDataPath;
+        tempClearsPath = Path.Combine(folderRoot, "tempClears");
+        Directory.CreateDirectory(folderRoot);
+        Directory.CreateDirectory(tempClearsPath);
+    }
     
     private StringBuilder outputBuilder = new StringBuilder();
     private void addLogFromMainThread(string msg)
@@ -151,26 +155,24 @@ public class uiEvents : MonoBehaviour
 
     private async void OnEnable()
     {
+        InitializeStoragePaths();
+
         VisualElement root = GetComponent<UIDocument>().rootVisualElement;
         //_tree = root.Q<MultiColumnTreeView>("TreeControl");
         _outputTextField = root.Q<TextField>("outputText");
+        UiInputCaptureState.TrackTextInput(_outputTextField);
         //_clearDropdown = root.Q<DropdownField>("ClearDropdown");
         //_clearLabel = root.Q<Label>("ClearLabel");
         _exitButton = root.Q<Button>("Exit");
         _progress = root.Q<UnityEngine.UIElements.ProgressBar>("Progress");
-        _generateButton = root.Q<Button>("Generate");
         _saveButton = root.Q<Button>("SaveFigure");
         _loadButton = root.Q<Button>("LoadFigure");
         _impotTab = root.Q<ImportTab>("ImportTabControl");
-        _toleranceRadio = root.Q<RadioButtonGroup>("ToleranceRadio");
-        _two = root.Q<Toggle>("Two");
-        _three = root.Q<Toggle>("Three");
-        _six = root.Q<Toggle>("Six");
-        _nine = root.Q<Toggle>("Nine");
-        _toleranceDialog = root.Q<VisualElement>("Modal1");
-        _cancel = root.Q<Button>("Cancel");
+        _generateFigureDialog = root.Q<GenerateFigureDialog>("GenerateFigureDialogControl");
         _allSelectorTab = root.Q<SelectorTab>("AllSelectorTab");
         _tabView = root.Q<TabView>("tabView");
+        UiInputCaptureState.TrackPointerHover(_tabView);
+        UiInputCaptureState.TrackPointerHover(_allSelectorTab);
         _tabView.activeTabChanged += _tabView_activeTabChanged;
         _showOutputButton = root.Q<Button>("showOutput");
         _showOutputButton.RegisterCallback<ClickEvent>((evt) =>
@@ -188,12 +190,16 @@ public class uiEvents : MonoBehaviour
         });
 
 
-        _toleranceDialog.style.display = DisplayStyle.None;
         _outputTextField.style.whiteSpace = WhiteSpace.Normal;
 
 
         var openModalButton = root.Q<Button>("OpenModalButton");
-        openModalButton.RegisterCallback<ClickEvent>(e => OnOpenModal());
+        openModalButton.RegisterCallback<ClickEvent>(e => _generateFigureDialog?.ShowDialog());
+        if (_generateFigureDialog != null)
+        {
+            _generateFigureDialog.GenerateRequested += HandleExportStlClick;
+            _generateFigureDialog.HideDialog();
+        }
        
 
         Directory.CreateDirectory(folderRoot);
@@ -210,17 +216,11 @@ public class uiEvents : MonoBehaviour
             Application.Quit();
         });
 
-        _cancel.RegisterCallback<ClickEvent>(e =>
-        {
-            _toleranceDialog.style.display = DisplayStyle.None;
-        });
         /*
         _progress.value = 0;
         _progress.visible = false;
         _progress.style.display = DisplayStyle.None;
         */
-        _generateButton.RegisterCallback<ClickEvent>(HandleExportStlClick);
-
         _saveButton.RegisterCallback<ClickEvent>(HandleSaveButtonClick);
         
 
@@ -259,8 +259,16 @@ public class uiEvents : MonoBehaviour
         fullLookAtPos = new Vector3(0f, Utils.reversePercentage(_baseSize[1], fullPercent - 10), 0f);
 
         DataManager.Instance.OnAppliedChanged += OnAppliedChanged;
-    
+
         ZoomCameraToTarget(CameraTarget.Full);
+    }
+
+    private void OnDisable()
+    {
+        if (_generateFigureDialog != null)
+        {
+            _generateFigureDialog.GenerateRequested -= HandleExportStlClick;
+        }
     }
 
     private void _tabView_activeTabChanged(Tab arg1, Tab arg2)
@@ -337,29 +345,23 @@ public class uiEvents : MonoBehaviour
     }
 
     private string lastFileName = "figure";
-    private async void HandleExportStlClick(ClickEvent evt)
+    private async void HandleExportStlClick()
     {
         UnityEngine.Debug.Log($"HandleExportStlClick starting");
 
         var export = getExports();
        
-        var sixinch = _six.value;
-        var nineinch = _nine.value;
-        var twoinch = _two.value;
-        var threeinch = _three.value;
+        var sixinch = _generateFigureDialog != null && _generateFigureDialog.GenerateSix;
+        var nineinch = _generateFigureDialog != null && _generateFigureDialog.GenerateNine;
+        var twoinch = _generateFigureDialog != null && _generateFigureDialog.GenerateTwo;
+        var threeinch = _generateFigureDialog != null && _generateFigureDialog.GenerateThree;
         List<CutConfig> cuts = new List<CutConfig>();
         Func<string, string, string> createCutsFilePath = (sizeString, toleranceString) =>
         {
             return Path.Combine(folderRoot, $"cuts_{sizeString}_{toleranceString}.stl");
         };
 
-        var toleranceString = _toleranceRadio.value switch
-        {
-            0 => "0.25",
-            1 => "0.30",
-            2 => "0.35",
-            _ => "WHAA"
-        };
+        var toleranceString = _generateFigureDialog?.SelectedTolerance ?? "0.25";
 
         Action<string, double> addCut = (sizeString, scaleFactor) =>
         {
@@ -416,7 +418,6 @@ public class uiEvents : MonoBehaviour
             {
                 CreateFinalFigure(tempFile, path, addLogFromBg);
             }, $"Creating figure for {lastFileName}");
-            CloseModal();
             await task;
         }
     }
@@ -434,7 +435,7 @@ public class uiEvents : MonoBehaviour
         outputBuilder.Clear();
         progressStack++;
         _tabView.SetEnabled(false);
-        _generateButton.SetEnabled(false);
+        _generateFigureDialog?.SetEnabled(false);
         _loadButton.SetEnabled(false);
         _saveButton.SetEnabled(false);
         _exitButton.SetEnabled(false);
@@ -451,7 +452,7 @@ public class uiEvents : MonoBehaviour
             await UniTask.SwitchToMainThread();
             _progress.visible = false;
             _progress.style.display = DisplayStyle.None;
-            _generateButton.SetEnabled(true);
+            _generateFigureDialog?.SetEnabled(true);
             _loadButton.SetEnabled(true);
             _saveButton.SetEnabled(true);
             _exitButton.SetEnabled(true);
@@ -623,18 +624,4 @@ public class uiEvents : MonoBehaviour
         }
     }
 
-    private void OnOpenModal()
-    {
-        _toleranceDialog.style.display = DisplayStyle.Flex;
-    }
-
-    private void OnCloseModal()
-    {
-        CloseModal();
-    }
-
-    private void CloseModal()
-    {
-        _toleranceDialog.style.display = DisplayStyle.None;
-    }
 }

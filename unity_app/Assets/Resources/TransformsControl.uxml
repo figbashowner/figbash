@@ -1,5 +1,6 @@
 <engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <engine:VisualElement style="flex-grow: 1; border-left-color: rgb(91, 91, 91); border-right-color: rgb(91, 91, 91); border-top-color: rgb(91, 91, 91); border-bottom-color: rgb(91, 91, 91); background-color: rgba(176, 176, 176, 0); flex-direction: column; align-items: stretch; justify-content: flex-end;">
+    <Style src="project://database/Assets/UI%20Toolkit/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=685fb82c6889f484490d2de1aba5fab5&amp;type=3#Styles" />
+    <engine:VisualElement class="panel-shell transforms-shell" style="flex-grow: 1; flex-direction: column; align-items: stretch; justify-content: flex-end;">
         <Assets.TransformTrioControl name="Position" description="Position, as a percentage of the size of the base figure on that axis." />
         <Assets.TransformTrioControl name="Scale" description="Scale, as a percentage of the original size of the imported file on that \naxis (before being rotated below)." show-uniform-toggle="true" />
         <Assets.TransformTrioControl name="Rotation" description="Rotation, as an angle around that axis" style="height: auto;" />

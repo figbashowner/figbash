@@ -1,0 +1,19 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI%20Toolkit/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=685fb82c6889f484490d2de1aba5fab5&amp;type=3#Styles" />
+    <ui:VisualElement name="GenerateFigureDialogRoot" class="modal" style="display: flex; visibility: visible;">
+        <ui:VisualElement name="GenerateFigureDialogContent" class="modal-content panel-card" style="display: flex;">
+            <ui:GroupBox style="align-items: flex-end; align-self: flex-start;">
+                <ui:Toggle label="Generate 2.75 inch figure" name="Two" />
+                <ui:Toggle label="Generate 3.75 inch figure" value="true" name="Three" />
+                <ui:Toggle label="Generate 6 inch figure" name="Six" />
+                <ui:Toggle label="Generate 9 inch figure" name="Nine" />
+            </ui:GroupBox>
+            <ui:RadioButtonGroup label="Figure Size" value="1" name="SizeRadio" choices="2.75 inch,3.75 inch,6 inch,9 inch" style="display: none;" />
+            <ui:RadioButtonGroup label="Articulation Tolerance" value="0" choices="0.25mm,0.30mm (not available for 2.75 inch figure),0.35mm (not available for 2.75 inch figure)" name="ToleranceRadio" />
+            <ui:GroupBox style="flex-direction: row; justify-content: center;">
+                <ui:Button text="Generate Now" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Generate" />
+                <ui:Button text="Cancel" name="Cancel" />
+            </ui:GroupBox>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

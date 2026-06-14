@@ -1,0 +1,775 @@
+/* Dark graphite theme with teal accents. */
+
+.body {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0);
+    color: rgb(230, 236, 243);
+}
+
+.panel-shell {
+    background-color: rgba(18, 23, 31, 0.92);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(43, 52, 66);
+    border-right-color: rgb(43, 52, 66);
+    border-top-color: rgb(43, 52, 66);
+    border-bottom-color: rgb(43, 52, 66);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
+    border-bottom-left-radius: 16px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    color: rgb(230, 236, 243);
+}
+
+.panel-card,
+.modal-content {
+    background-color: rgb(25, 31, 41);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(57, 70, 88);
+    border-right-color: rgb(57, 70, 88);
+    border-top-color: rgb(57, 70, 88);
+    border-bottom-color: rgb(57, 70, 88);
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    border-bottom-right-radius: 12px;
+    border-bottom-left-radius: 12px;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    color: rgb(230, 236, 243);
+}
+
+.transform-trio {
+    margin-bottom: 10px;
+}
+
+.transform-fields {
+    flex-direction: column;
+}
+
+.transform-fields > FloatField,
+.transform-fields > .unity-base-field {
+    margin-bottom: 8px;
+}
+
+.modal {
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    display: none;
+    position: absolute;
+    background-color: rgba(5, 8, 12, 0.72);
+}
+
+TabView,
+.unity-tab-view {
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0px;
+    border-right-width: 0px;
+    border-top-width: 0px;
+    border-bottom-width: 0px;
+    overflow: visible;
+}
+
+#tabView {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+TabView > .unity-tab-view__header-container,
+.unity-tab-view__header-container {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    background-color: rgb(18, 24, 32);
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(43, 52, 66);
+    padding-left: 6px;
+    padding-right: 6px;
+    padding-top: 6px;
+    padding-bottom: 0px;
+}
+
+TabView > .unity-tab-view__content-container,
+.unity-tab-view__content-container {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background-color: rgb(18, 23, 31);
+    overflow: hidden;
+}
+
+.tab-pane {
+    background-color: rgb(18, 23, 31);
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+}
+
+Tab > .unity-tab__content-container,
+.unity-tab__content-container {
+    background-color: rgb(18, 23, 31);
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+Tab,
+.unity-tab {
+    margin-right: 4px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+Tab:checked,
+.unity-tab:checked {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+Tab .unity-tab__header,
+.unity-tab__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    height: 22px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    overflow: hidden;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    background-color: rgb(27, 33, 43);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(48, 58, 74);
+    border-right-color: rgb(48, 58, 74);
+    border-top-color: rgb(48, 58, 74);
+    border-bottom-color: rgb(48, 58, 74);
+}
+
+Tab:hover .unity-tab__header,
+.unity-tab__header:hover {
+    background-color: rgb(32, 39, 50);
+    border-left-color: rgb(64, 79, 100);
+    border-right-color: rgb(64, 79, 100);
+    border-top-color: rgb(64, 79, 100);
+    border-bottom-color: rgb(64, 79, 100);
+}
+
+Tab:checked .unity-tab__header,
+.unity-tab__header:checked {
+    background-color: rgb(35, 43, 56);
+    border-left-color: rgb(76, 99, 126);
+    border-right-color: rgb(76, 99, 126);
+    border-top-color: rgb(76, 99, 126);
+    border-bottom-color: rgb(76, 99, 126);
+}
+
+Tab .unity-tab__header-underline,
+.unity-tab__header-underline {
+    height: 3px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+Tab:checked .unity-tab__header-underline,
+.unity-tab__header:checked .unity-tab__header-underline {
+    background-color: rgb(51, 187, 187);
+}
+
+Tab .unity-tab__header-label,
+.unity-tab__header-label {
+    padding-left: 4px;
+    padding-right: 4px;
+    color: rgb(214, 221, 228);
+    -unity-text-align: middle-left;
+    flex-shrink: 1;
+}
+
+Button,
+.unity-button {
+    -unity-text-align: middle-center;
+    background-color: rgb(32, 41, 54);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(61, 75, 94);
+    border-right-color: rgb(61, 75, 94);
+    border-top-color: rgb(61, 75, 94);
+    border-bottom-color: rgb(61, 75, 94);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    min-height: 26px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    color: rgb(232, 238, 244);
+}
+
+Button .unity-button__text,
+.unity-button .unity-button__text {
+    color: rgb(232, 238, 244);
+}
+
+Button:hover,
+.unity-button:hover {
+    background-color: rgb(40, 51, 67);
+    border-left-color: rgb(82, 103, 129);
+    border-right-color: rgb(82, 103, 129);
+    border-top-color: rgb(82, 103, 129);
+    border-bottom-color: rgb(82, 103, 129);
+}
+
+Button:active,
+.unity-button:active {
+    background-color: rgb(24, 31, 41);
+}
+
+Button:disabled,
+.unity-button:disabled {
+    background-color: rgb(24, 31, 41);
+    opacity: 0.55;
+}
+
+#SelectedItemsList Button,
+#SelectedItemsList .unity-button,
+#TreeControl Button,
+#TreeControl .unity-button {
+    background-image: none;
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0);
+}
+
+#SelectedItemsList Button:hover,
+#SelectedItemsList .unity-button:hover,
+#TreeControl Button:hover,
+#TreeControl .unity-button:hover {
+    background-color: rgb(40, 51, 67);
+    background-image: none;
+    border-left-color: rgb(82, 103, 129);
+    border-right-color: rgb(82, 103, 129);
+    border-top-color: rgb(82, 103, 129);
+    border-bottom-color: rgb(82, 103, 129);
+}
+
+#SelectedItemsList Button:active,
+#SelectedItemsList .unity-button:active,
+#TreeControl Button:active,
+#TreeControl .unity-button:active {
+    background-color: rgb(24, 31, 41);
+    background-image: none;
+}
+
+#SelectedItemsList Button:disabled,
+#SelectedItemsList .unity-button:disabled,
+#TreeControl Button:disabled,
+#TreeControl .unity-button:disabled {
+    background-color: rgb(24, 31, 41);
+    background-image: none;
+    opacity: 0.55;
+}
+
+#Generate,
+#AddRepoButton,
+#ImportButton,
+#OpenModalButton {
+    background-color: rgb(28, 165, 164);
+    border-left-color: rgb(52, 203, 201);
+    border-right-color: rgb(52, 203, 201);
+    border-top-color: rgb(52, 203, 201);
+    border-bottom-color: rgb(52, 203, 201);
+    color: rgb(10, 17, 22);
+}
+
+#Generate {
+    margin-right: 8px;
+}
+
+#Generate:hover,
+#AddRepoButton:hover,
+#ImportButton:hover,
+#OpenModalButton:hover {
+    background-color: rgb(47, 184, 183);
+    border-left-color: rgb(76, 222, 219);
+    border-right-color: rgb(76, 222, 219);
+    border-top-color: rgb(76, 222, 219);
+    border-bottom-color: rgb(76, 222, 219);
+}
+
+#Generate:active,
+#AddRepoButton:active,
+#ImportButton:active,
+#OpenModalButton:active {
+    background-color: rgb(22, 132, 132);
+}
+
+#AddRepoButton,
+#ImportButton {
+    width: 100%;
+    align-self: stretch;
+    margin-bottom: 10px;
+}
+
+#Exit {
+    background-color: rgb(107, 45, 56);
+    border-left-color: rgb(157, 79, 91);
+    border-right-color: rgb(157, 79, 91);
+    border-top-color: rgb(157, 79, 91);
+    border-bottom-color: rgb(157, 79, 91);
+    color: rgb(248, 235, 237);
+}
+
+#Exit,
+#LoadFigure,
+#SaveFigure,
+#OpenModalButton {
+    margin-left: 8px;
+}
+
+#Exit:hover {
+    background-color: rgb(131, 57, 69);
+    border-left-color: rgb(182, 95, 109);
+    border-right-color: rgb(182, 95, 109);
+    border-top-color: rgb(182, 95, 109);
+    border-bottom-color: rgb(182, 95, 109);
+}
+
+#Cancel,
+#LoadFigure,
+#SaveFigure,
+#showOutput {
+    background-color: rgb(28, 35, 46);
+    border-left-color: rgb(61, 76, 96);
+    border-right-color: rgb(61, 76, 96);
+    border-top-color: rgb(61, 76, 96);
+    border-bottom-color: rgb(61, 76, 96);
+}
+
+#Cancel {
+    margin-left: 8px;
+}
+
+#Cancel:hover,
+#LoadFigure:hover,
+#SaveFigure:hover,
+#showOutput:hover {
+    background-color: rgb(37, 46, 60);
+    border-left-color: rgb(82, 103, 129);
+    border-right-color: rgb(82, 103, 129);
+    border-top-color: rgb(82, 103, 129);
+    border-bottom-color: rgb(82, 103, 129);
+}
+
+#showOutput {
+    min-height: 24px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+TextField,
+FloatField,
+DropdownField,
+PopupField,
+EnumField,
+.unity-popup-field,
+.unity-enum-field,
+.unity-base-popup-field {
+    background-color: rgb(19, 24, 32);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(54, 66, 84);
+    border-right-color: rgb(54, 66, 84);
+    border-top-color: rgb(54, 66, 84);
+    border-bottom-color: rgb(54, 66, 84);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    min-height: 28px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    color: rgb(230, 236, 243);
+}
+
+DropdownField,
+PopupField,
+EnumField,
+.unity-popup-field,
+.unity-enum-field,
+.unity-base-popup-field {
+    min-height: 24px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    overflow: hidden;
+}
+
+TextField:hover,
+FloatField:hover,
+DropdownField:hover,
+PopupField:hover,
+EnumField:hover,
+.unity-popup-field:hover,
+.unity-enum-field:hover,
+.unity-base-popup-field:hover {
+    border-left-color: rgb(76, 99, 126);
+    border-right-color: rgb(76, 99, 126);
+    border-top-color: rgb(76, 99, 126);
+    border-bottom-color: rgb(76, 99, 126);
+}
+
+DropdownField .unity-base-popup-field__label,
+PopupField .unity-base-popup-field__label,
+EnumField .unity-base-popup-field__label,
+.unity-popup-field .unity-base-popup-field__label,
+.unity-enum-field .unity-base-popup-field__label,
+.unity-base-popup-field .unity-base-popup-field__label {
+    color: rgb(194, 205, 216);
+}
+
+DropdownField .unity-base-popup-field__text,
+PopupField .unity-base-popup-field__text,
+EnumField .unity-base-popup-field__text,
+.unity-popup-field .unity-base-popup-field__text,
+.unity-enum-field .unity-base-popup-field__text,
+.unity-base-popup-field .unity-base-popup-field__text,
+DropdownField .unity-popup-field__text,
+PopupField .unity-popup-field__text,
+EnumField .unity-popup-field__text,
+.unity-popup-field .unity-popup-field__text,
+.unity-enum-field .unity-popup-field__text,
+.unity-base-popup-field .unity-popup-field__text,
+DropdownField .unity-enum-field__text,
+PopupField .unity-enum-field__text,
+EnumField .unity-enum-field__text {
+    color: rgb(230, 236, 243);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+DropdownField .unity-base-popup-field__input,
+PopupField .unity-base-popup-field__input,
+EnumField .unity-base-popup-field__input,
+.unity-popup-field .unity-base-popup-field__input,
+.unity-enum-field .unity-base-popup-field__input,
+.unity-base-popup-field .unity-base-popup-field__input,
+DropdownField .unity-popup-field__input,
+PopupField .unity-popup-field__input,
+EnumField .unity-popup-field__input,
+.unity-popup-field .unity-popup-field__input,
+.unity-enum-field .unity-popup-field__input,
+.unity-base-popup-field .unity-popup-field__input,
+DropdownField .unity-enum-field__input,
+PopupField .unity-enum-field__input,
+EnumField .unity-enum-field__input {
+    background-color: rgba(0, 0, 0, 0);
+    flex-grow: 1;
+}
+
+DropdownField .unity-base-popup-field__arrow,
+PopupField .unity-base-popup-field__arrow,
+EnumField .unity-base-popup-field__arrow,
+.unity-popup-field .unity-base-popup-field__arrow,
+.unity-enum-field .unity-base-popup-field__arrow,
+.unity-base-popup-field .unity-base-popup-field__arrow,
+DropdownField .unity-popup-field__arrow,
+PopupField .unity-popup-field__arrow,
+EnumField .unity-popup-field__arrow,
+.unity-popup-field .unity-popup-field__arrow,
+.unity-enum-field .unity-popup-field__arrow,
+.unity-base-popup-field .unity-popup-field__arrow,
+DropdownField .unity-enum-field__arrow,
+PopupField .unity-enum-field__arrow,
+EnumField .unity-enum-field__arrow {
+    background-color: rgba(0, 0, 0, 0);
+    opacity: 0.85;
+}
+
+DropdownField .unity-base-popup-field__arrow:hover,
+PopupField .unity-base-popup-field__arrow:hover,
+EnumField .unity-base-popup-field__arrow:hover,
+.unity-popup-field .unity-base-popup-field__arrow:hover,
+.unity-enum-field .unity-base-popup-field__arrow:hover,
+.unity-base-popup-field .unity-base-popup-field__arrow:hover,
+DropdownField .unity-popup-field__arrow:hover,
+PopupField .unity-popup-field__arrow:hover,
+EnumField .unity-popup-field__arrow:hover,
+.unity-popup-field .unity-popup-field__arrow:hover,
+.unity-enum-field .unity-popup-field__arrow:hover,
+.unity-base-popup-field .unity-popup-field__arrow:hover,
+DropdownField .unity-enum-field__arrow:hover,
+PopupField .unity-enum-field__arrow:hover,
+EnumField .unity-enum-field__arrow:hover {
+    opacity: 1;
+}
+
+FloatField .unity-base-field__input,
+FloatField .unity-float-field__input,
+FloatField .unity-text-input {
+    background-color: rgb(19, 24, 32);
+    color: rgb(230, 236, 243);
+}
+
+#outputText {
+    background-color: rgb(14, 18, 24);
+    color: rgb(230, 236, 243);
+    min-height: 120px;
+}
+
+#outputText .unity-base-text-field__input,
+#outputText .unity-text-input,
+#outputText .unity-base-text-field__multiline-container,
+#outputText .unity-base-text-field--scroll-view {
+    background-color: rgb(14, 18, 24);
+    color: rgb(230, 236, 243);
+}
+
+.unity-base-dropdown__checkmark {
+    color: rgb(230, 236, 243);
+    -unity-background-image-tint-color: rgb(230, 236, 243);
+    background-size: 80% 80%;
+    width: 16px;
+    height: 16px;
+    opacity: 1;
+}
+
+Label {
+    color: rgb(230, 236, 243);
+}
+
+#description {
+    color: rgb(194, 205, 216);
+    margin-bottom: 8px;
+}
+
+Toggle {
+    color: rgb(230, 236, 243);
+    margin-bottom: 4px;
+}
+
+GroupBox,
+RadioButtonGroup {
+    background-color: rgb(22, 28, 36);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(55, 67, 84);
+    border-right-color: rgb(55, 67, 84);
+    border-top-color: rgb(55, 67, 84);
+    border-bottom-color: rgb(55, 67, 84);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    color: rgb(230, 236, 243);
+}
+
+#Progress {
+    background-color: rgb(19, 24, 31);
+    color: rgb(230, 236, 243);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(57, 70, 88);
+    border-right-color: rgb(57, 70, 88);
+    border-top-color: rgb(57, 70, 88);
+    border-bottom-color: rgb(57, 70, 88);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    min-height: 20px;
+}
+
+#Progress .unity-progress-bar__container {
+    background-color: rgb(19, 24, 31);
+}
+
+#Progress .unity-progress-bar__title-container {
+    background-color: rgba(0, 0, 0, 0);
+    align-items: center;
+    justify-content: center;
+}
+
+#Progress .unity-progress-bar__title {
+    color: rgb(230, 236, 243);
+    -unity-text-align: middle-center;
+}
+
+#Progress .unity-progress-bar__background {
+    background-color: rgb(14, 18, 24);
+}
+
+#Progress .unity-progress-bar__progress {
+    background-color: rgb(28, 165, 164);
+}
+
+
+.unity-multi-column-header__column,
+.unity-multi-column-header__column:disabled,
+.unity-multi-column-header__column--disabled,
+.unity-multi-column-header__column__disabled,
+.unity-multi-column-header__column-container,
+.unity-multi-column-header__column__title,
+.unity-multi-column-header__column__sort-indicator
+{
+    background-color: rgb(32, 41, 54);
+    color: rgb(230, 236, 243);
+}
+/*
+.unity-multi-column-header__resize-handle-container
+{
+    background-color: rgba(32, 41, 54, 1);
+    color: rgb(230, 236, 243);
+}
+*/
+#SelectedItemsList,
+#TreeControl {
+    background-color: rgb(18, 23, 31);
+    flex-grow: 1;
+    flex-shrink: 1;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(43, 52, 66);
+    border-right-color: rgb(43, 52, 66);
+    border-top-color: rgb(43, 52, 66);
+    border-bottom-color: rgb(43, 52, 66);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    overflow: hidden;
+    min-height: 0;
+    padding-left: 0px;
+    padding-right: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+.unity-scroll-view__content-container {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+#SelectedItemsList Label,
+#TreeControl Label {
+    color: rgb(230, 236, 243);
+}
+
+#SelectedItemsList .unity-list-view__item,
+#SelectedItemsList .unity-collection-view__item,
+#SelectedItemsList .unity-tree-view__item,
+#TreeControl .unity-list-view__item,
+#TreeControl .unity-collection-view__item,
+#TreeControl .unity-tree-view__item {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+#SelectedItemsList .unity-list-view__item:hover,
+#SelectedItemsList .unity-collection-view__item:hover,
+#SelectedItemsList .unity-tree-view__item:hover,
+#TreeControl .unity-list-view__item:hover,
+#TreeControl .unity-collection-view__item:hover,
+#TreeControl .unity-tree-view__item:hover {
+    background-color: rgba(51, 118, 153, 0.20);
+}
+
+#SelectedItemsList .unity-list-view__item:selected,
+#SelectedItemsList .unity-collection-view__item:selected,
+#SelectedItemsList .unity-collection-view__item--selected,
+#SelectedItemsList .unity-tree-view__item:selected,
+#TreeControl .unity-list-view__item:selected,
+#TreeControl .unity-collection-view__item:selected,
+#TreeControl .unity-collection-view__item--selected,
+#TreeControl .unity-tree-view__item:selected {
+    background-color: rgba(51, 118, 153, 0.36);
+}
+
+.unity-scroll-view__content-and-vertical-scroll-container,
+.unity-base-dropdown__container-inner {
+    background-color: rgb(18, 23, 31);
+}
+
+Scroller,
+.unity-scroller,
+.unity-scroll-view__vertical-scroller,
+.unity-scroll-view__horizontal-scroller,
+.unity-base-slider {
+    background-color: rgb(21, 27, 36);
+}
+
+Scroller .unity-scroller__slider-background,
+Scroller .unity-base-slider__tracker,
+.unity-scroller__slider-background,
+.unity-base-slider__tracker {
+    background-color: rgb(27, 33, 43);
+}
+
+Scroller .unity-scroller__slider,
+Scroller .unity-base-slider__dragger,
+.unity-scroller__slider,
+.unity-base-slider__dragger{
+    background-color: rgb(51, 187, 187);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+Scroller .unity-scroller__slider:hover,
+.unity-scroller__slider:hover {
+    background-color: rgb(69, 208, 206);
+}
+
+Scroller .unity-scroller__slider:active,
+.unity-scroller__slider:active {
+    background-color: rgb(26, 144, 143);
+}
+
+Scroller .unity-scroller__low-button,
+Scroller .unity-scroller__high-button,
+.unity-scroller__low-button,
+.unity-scroller__high-button {
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0px;
+    border-right-width: 0px;
+    border-top-width: 0px;
+    border-bottom-width: 0px;
+}

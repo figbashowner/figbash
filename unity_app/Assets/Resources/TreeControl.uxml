@@ -1,27 +1,27 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/Styles.uss?fileID=7433441132597879392&amp;guid=685fb82c6889f484490d2de1aba5fab5&amp;type=3#Styles" />
-    <ui:VisualElement name="VisualElement" style="flex-grow: 1; justify-content: flex-end; right: 0; position: absolute; top: 0; left: 0; bottom: 0; background-color: rgba(128, 195, 216, 0);">
-        <ui:TabView name="tabView" style="width: auto; flex-grow: 1; flex-shrink: 0; flex-direction: column; justify-content: flex-start; align-content: auto; align-self: auto; background-color: rgba(23, 118, 176, 0); position: absolute; top: 0; bottom: 0; left: 0; right: 60%; align-items: stretch; flex-wrap: nowrap;">
-            <ui:Tab label="All" name="AllTab" style="flex-grow: 1; flex-shrink: 0; bottom: 0; flex-direction: column; flex-basis: auto; align-self: stretch; align-content: auto; height: auto; top: 0; background-color: rgba(60, 60, 60, 0); max-height: none; min-height: auto; justify-content: flex-start; align-items: stretch;">
-                <Assets.SelectorTab name="AllSelectorTab" style="flex-grow: 1; flex-shrink: 0; height: 725px; bottom: auto; max-height: none; min-height: 40px; flex-direction: column; justify-content: flex-start; align-self: stretch; top: auto; background-color: rgba(255, 0, 0, 0);" />
+    <Style src="project://database/Assets/UI%20Toolkit/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=685fb82c6889f484490d2de1aba5fab5&amp;type=3#Styles" />
+    <ui:VisualElement name="VisualElement" class="body" style="flex-grow: 1; justify-content: flex-end; right: 0; position: absolute; top: 0; left: 0; bottom: 0;">
+        <ui:TabView name="tabView" style="width: auto; flex-grow: 1; flex-shrink: 0; flex-direction: column; justify-content: flex-start; align-content: auto; align-self: auto; position: absolute; top: 0; bottom: 0; left: 0; right: 60%; align-items: stretch; flex-wrap: nowrap;">
+            <ui:Tab label="All" name="AllTab" class="tab-pane" style="flex-grow: 1; flex-shrink: 0; bottom: auto; flex-direction: column; flex-basis: 100%; align-self: stretch; align-content: auto; height: auto; top: auto; max-height: none; min-height: auto; justify-content: flex-start; align-items: stretch;">
+                <Assets.SelectorTab name="AllSelectorTab" style="flex-grow: 1; flex-shrink: 1; min-height: 0; max-height: none; flex-direction: column; justify-content: flex-start; align-self: stretch;" />
             </ui:Tab>
-            <ui:Tab label="Head" name="HeadTab" style="flex-grow: 1; flex-shrink: 0; bottom: auto; flex-direction: column; flex-basis: 100%; align-self: stretch; align-content: auto; height: auto; top: auto; background-color: rgb(176, 23, 112); max-height: none; min-height: auto; justify-content: flex-start; align-items: stretch;">
-                <Assets.SelectorTab filter="200.head" style="flex-grow: 1; flex-shrink: 0; height: 725px; bottom: auto; max-height: none; min-height: 40px; flex-direction: column; justify-content: flex-start; align-self: stretch; top: auto; background-color: rgba(255, 0, 0, 0);" />
+            <ui:Tab label="Head" name="HeadTab" class="tab-pane" style="flex-grow: 1; flex-shrink: 0; bottom: auto; flex-direction: column; flex-basis: 100%; align-self: stretch; align-content: auto; height: auto; top: auto; max-height: none; min-height: auto; justify-content: flex-start; align-items: stretch;">
+                <Assets.SelectorTab filter="200.head" style="flex-grow: 1; flex-shrink: 1; min-height: 0; max-height: none; flex-direction: column; justify-content: flex-start; align-self: stretch;" />
             </ui:Tab>
-            <ui:Tab label="Torso" name="TorsoTab" style="flex-grow: 1; flex-shrink: 0; bottom: auto; flex-direction: column; flex-basis: 100%; align-self: stretch; align-content: auto; height: auto; top: auto; background-color: rgb(176, 23, 112); max-height: none; min-height: auto; justify-content: flex-start; align-items: stretch;">
-                <Assets.SelectorTab filter="300.torso" style="flex-grow: 1; flex-shrink: 0; height: 725px; bottom: auto; max-height: none; min-height: 40px; flex-direction: column; justify-content: flex-start; align-self: stretch; top: auto; background-color: rgba(255, 0, 0, 0);" />
+            <ui:Tab label="Torso" name="TorsoTab" class="tab-pane" style="flex-grow: 1; flex-shrink: 0; bottom: auto; flex-direction: column; flex-basis: 100%; align-self: stretch; align-content: auto; height: auto; top: auto; max-height: none; min-height: auto; justify-content: flex-start; align-items: stretch;">
+                <Assets.SelectorTab filter="300.torso" style="flex-grow: 1; flex-shrink: 1; min-height: 0; max-height: none; flex-direction: column; justify-content: flex-start; align-self: stretch;" />
             </ui:Tab>
-            <ui:Tab label="Legs" name="LegsTab" style="flex-grow: 1; flex-shrink: 0; bottom: auto; flex-direction: column; flex-basis: 100%; align-self: stretch; align-content: auto; height: auto; top: auto; background-color: rgba(176, 23, 112, 0); max-height: none; min-height: auto; justify-content: flex-start; align-items: stretch;">
-                <Assets.SelectorTab filter="400.legs" style="flex-grow: 1; flex-shrink: 0; height: 725px; bottom: auto; max-height: none; min-height: 40px; flex-direction: column; justify-content: flex-start; align-self: stretch; top: auto; background-color: rgba(255, 0, 0, 0);" />
+            <ui:Tab label="Legs" name="LegsTab" class="tab-pane" style="flex-grow: 1; flex-shrink: 0; bottom: auto; flex-direction: column; flex-basis: 100%; align-self: stretch; align-content: auto; height: auto; top: auto; max-height: none; min-height: auto; justify-content: flex-start; align-items: stretch;">
+                <Assets.SelectorTab filter="400.legs" style="flex-grow: 1; flex-shrink: 1; min-height: 0; max-height: none; flex-direction: column; justify-content: flex-start; align-self: stretch;" />
             </ui:Tab>
-            <ui:Tab label="Import" name="ImportTab" style="flex-basis: 100%; flex-shrink: 0; flex-grow: 1;">
-                <Assets.ImportTab name="ImportTabControl" style="flex-grow: 1; flex-shrink: 0; height: 725px; bottom: auto; max-height: none; min-height: 40px; flex-direction: column; justify-content: flex-start; align-self: stretch; top: auto; background-color: rgba(255, 0, 0, 0);" />
+            <ui:Tab label="Import" name="ImportTab" class="tab-pane" style="flex-basis: 100%; flex-shrink: 0; flex-grow: 1;">
+                <Assets.ImportTab name="ImportTabControl" style="flex-grow: 1; flex-shrink: 1; min-height: 0; max-height: none; flex-direction: column; justify-content: flex-start; align-self: stretch;" />
             </ui:Tab>
-            <ui:Tab label="Repositories" name="RepoTab" enabled="false" style="flex-basis: 100%; flex-shrink: 0; flex-grow: 1;">
-                <Assets.RepoTab name="RepoTabControl" style="flex-grow: 1; flex-shrink: 0; height: 725px; bottom: auto; max-height: none; min-height: 40px; flex-direction: column; justify-content: flex-start; align-self: stretch; top: auto; background-color: rgba(255, 0, 0, 0);" />
+            <ui:Tab label="Repositories" name="RepoTab" class="tab-pane" enabled="true" style="flex-basis: 100%; flex-shrink: 0; flex-grow: 1;">
+                <Assets.RepoTab name="RepoTabControl" style="flex-grow: 1; flex-shrink: 1; min-height: 0; max-height: none; flex-direction: column; justify-content: flex-start; align-self: stretch;" />
             </ui:Tab>
         </ui:TabView>
-        <ui:VisualElement name="VisualElement" style="flex-grow: 1; flex-shrink: 0; position: absolute; right: 0; bottom: 0; max-width: 50%; max-height: 50%; justify-content: flex-end; align-items: flex-end; align-content: flex-end;">
+        <ui:VisualElement name="VisualElement" class="panel-shell status-panel" style="flex-grow: 1; flex-shrink: 0; position: absolute; right: 0; bottom: 0; max-width: 50%; max-height: 50%; justify-content: flex-end; align-items: flex-end; align-content: flex-end;">
             <ui:VisualElement style="flex-grow: 1; top: auto; left: auto; right: 0; bottom: 0; flex-shrink: 0; flex-direction: row-reverse; flex-wrap: wrap;">
                 <ui:TextField picking-mode="Ignore" readonly="true" name="outputText" focusable="true" multiline="true" style="align-items: stretch; justify-content: flex-end; align-self: flex-end; overflow: visible; flex-shrink: 0; flex-grow: 1; flex-direction: row-reverse; flex-wrap: wrap; white-space: normal; max-height: none; left: auto; top: auto; bottom: 0; right: 0; align-content: flex-end; display: none;" />
                 <ui:Button text="Open Log" name="showOutput" style="right: 0; bottom: 0; position: absolute;" />
@@ -34,21 +34,6 @@
                 <ui:Button text="Generate STL for Printing" parse-escape-sequences="true" display-tooltip-when-elided="true" name="OpenModalButton" />
             </ui:VisualElement>
         </ui:VisualElement>
-    </ui:VisualElement>
-    <ui:VisualElement name="Modal1" class="modal" style="display: flex; visibility: visible;">
-        <ui:VisualElement name="ModalContent1" class="modal-content" style="display: flex;">
-            <ui:GroupBox style="align-items: flex-end; align-self: flex-start;">
-                <ui:Toggle label="Generate 2.75 inch figure" name="Two" />
-                <ui:Toggle label="Generate 3.75 inch figure" value="true" name="Three" />
-                <ui:Toggle label="Generate 6 inch figure" name="Six" />
-                <ui:Toggle label="Generate 9 inch figure" name="Nine" />
-            </ui:GroupBox>
-            <ui:RadioButtonGroup label="Figure Size" value="1" name="SizeRadio" choices="2.75 inch,3.75 inch,6 inch,9 inch" style="display: none;" />
-            <ui:RadioButtonGroup label="Articulation Tolerance" value="0" choices="0.25mm,0.30mm (not available for 2.75 inch figure),0.35mm (not available for 2.75 inch figure)" name="ToleranceRadio" />
-            <ui:GroupBox style="flex-direction: row; justify-content: center;">
-                <ui:Button text="Generate Now" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Generate" />
-                <ui:Button text="Cancel" name="Cancel" />
-            </ui:GroupBox>
-        </ui:VisualElement>
+        <Assets.GenerateFigureDialog name="GenerateFigureDialogControl" />
     </ui:VisualElement>
 </ui:UXML>

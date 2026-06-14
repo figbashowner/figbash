@@ -97,6 +97,7 @@ namespace Assets
             {
                 ff.SetRangeValidation(-1000, 1000);
                 ff.RegisterValueChangedCallback(TransformEntryChanged);
+                UiInputCaptureState.TrackTextInput(ff);
 
             });
             setupFF(_backToFront);

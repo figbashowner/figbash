@@ -8,12 +8,15 @@ public class SimpleCameraController : MonoBehaviour
     public float mainSpeed = 10.0f; //regular speed
     public float shiftAdd = 250.0f; //multiplied by how long shift is held.  Basically running
     public float maxShift = 250.0f; //Maximum speed when holdin gshift
-    public float camSens = 0.25f; //How sensitive it with mouse
-    public bool invertY = true;
+    public float camSens = 0.5f; //How sensitive it with mouse
+    public float mouseVerticalSens = 0.1f;
+    public float mouseDragStepPixels = 50f;
 
     public float scrollWheelSens = 1f;
 
     //private Vector3 lastMouse = new Vector3(255, 255, 255); //kind of in the middle of the screen, rather than at the top (play)
+    private bool leftDragActive;
+    private Vector2 leftDragStartPosition;
 
     private void Start()
     {
@@ -25,22 +28,25 @@ public class SimpleCameraController : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButton(1))
+        var overUi = IsPointerOverUi();
+        var cameraInputBlocked = overUi || UiInputCaptureState.IsTextInputFocused;
+
+        if (cameraInputBlocked)
         {
-            var mouseMoveY = invertY ? -1 * Input.GetAxis("Mouse Y") : Input.GetAxis("Mouse Y");
-            var mouseMoveX = Input.GetAxis("Mouse X");
-
-            var mouseMove = new Vector3(mouseMoveY, mouseMoveX, 0) * camSens;
-            transform.eulerAngles = transform.eulerAngles + mouseMove;
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
         }
-
-        if (Input.GetMouseButtonDown(1))
+        else if (Input.GetMouseButton(1))
         {
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
         }
-
-        if (Input.GetMouseButtonUp(1))
+        else if (Input.GetMouseButton(0))
+        {
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.None;
+        }
+        else
         {
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
@@ -50,23 +56,23 @@ public class SimpleCameraController : MonoBehaviour
 
         //Keyboard commands
         //float f = 0.0f;
-        Vector3 p = GetBaseInput();
+        Vector3 p = GetBaseInput(cameraInputBlocked);
         if (p.sqrMagnitude > 0)
         { // only move while a direction key is pressed
+
+            if (p[0] != 0)
+            {
+                var angle = 33;
+                ApplyOrbit(angle * p[0] * Time.deltaTime);
+            }
 
             //Up arrow or Down arrow is in-and-out movement
             //Q and E are up-and-down movement.
             if (p[2] != 0 || p[1] != 0)
             {
-                p = p * mainSpeed;
-                p = p * Time.deltaTime;
-                transform.Translate(p);
-            }
-            else
-            {
-                var angle = 33;
-                Vector3 newLookAtPos = new Vector3(uiEvents.CameraLookAtPos[0], transform.position[1], uiEvents.CameraLookAtPos[2]);
-                transform.RotateAround(newLookAtPos, Vector3.up,  angle * p[0] *  Time.deltaTime);
+                var translation = new Vector3(0f, p[1], p[2]);
+                translation = translation * mainSpeed * Time.deltaTime;
+                transform.Translate(translation);
             }
             /*
                         UnityEngine.Debug.Log($"Camera position is {transform.position}, maybe looking at {uiEvents.CameraLookAtPos}");
@@ -79,14 +85,75 @@ public class SimpleCameraController : MonoBehaviour
         //mainSpeed += scroll * scrollWheelSens;
     }
 
-    private Vector3 GetBaseInput()
+    private static bool IsPointerOverUi()
+    {
+        return UiInputCaptureState.IsPointerOverTabView;
+    }
+
+    private void ApplyOrbit(float angleDelta)
+    {
+        var orbitPivot = new Vector3(uiEvents.CameraLookAtPos[0], transform.position[1], uiEvents.CameraLookAtPos[2]);
+        transform.RotateAround(orbitPivot, Vector3.up, angleDelta);
+    }
+
+    private void BeginLeftDrag()
+    {
+        leftDragActive = true;
+        leftDragStartPosition = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+    }
+
+    private void EndLeftDrag()
+    {
+        leftDragActive = false;
+    }
+
+    private Vector3 GetMouseDragInput(bool cameraInputBlocked)
+    {
+
+        if (cameraInputBlocked || !Input.GetMouseButton(0) || Input.GetMouseButton(1))
+        {
+            if (leftDragActive)
+            {
+                EndLeftDrag();
+            }
+
+            return Vector3.zero;
+        }
+
+        if (Input.GetMouseButtonDown(0) || !leftDragActive)
+        {
+            BeginLeftDrag();
+        }
+
+        var dragDelta = new Vector2(Input.mousePosition.x, Input.mousePosition.y) - leftDragStartPosition;
+        var pVelocity = Vector3.zero;
+        var stepSize = Mathf.Max(mouseDragStepPixels, 0.0001f);
+
+        if (Mathf.Abs(dragDelta.x) >= stepSize && Mathf.Abs(dragDelta.x) >= Mathf.Abs(dragDelta.y))
+        {
+            pVelocity += new Vector3(dragDelta.x > 0f ? 1f : -1f, 0f, 0f);
+        }
+        else if (Mathf.Abs(dragDelta.y) >= stepSize)
+        {
+            pVelocity += new Vector3(0f, dragDelta.y < 0f ? 1f : -1f, 0f);
+        }
+
+        return pVelocity;
+    }
+
+    private Vector3 GetBaseInput(bool cameraInputBlocked)
 
     { //returns the basic values, if it's 0 than it's not active.
-        var scrollDirection = Input.GetAxis("Mouse ScrollWheel");
+        Vector3 p_Velocity = GetMouseDragInput(cameraInputBlocked);
+        if (cameraInputBlocked)
+        {
+            return p_Velocity;
+        }
+
+        var scrollDirection = IsPointerOverUi() ? 0 : Input.GetAxis("Mouse ScrollWheel");
         //UnityEngine.Debug.Log($"Scroll axis is {scrollDirection}");
 
         var scrollMultiplier = 20;
-        Vector3 p_Velocity = new Vector3();
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow) || scrollDirection > 0)
         {
             p_Velocity += new Vector3(0, 0, 1 * (scrollDirection != 0 ? scrollMultiplier : 1));
