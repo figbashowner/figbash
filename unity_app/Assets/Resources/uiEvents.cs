@@ -121,8 +121,20 @@ public class uiEvents : MonoBehaviour
         }
     }
 
-    public static string folderRoot = Path.Combine(Path.GetTempPath(), "action_figure_builder"); 
-    public static string tempClearsPath = Path.Combine(Path.GetTempPath(), "action_figure_builder/tempClears"); 
+    public static string folderRoot { get; private set; }
+    public static string tempClearsPath { get; private set; }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void InitializeStoragePaths()
+    {
+        if (!string.IsNullOrWhiteSpace(folderRoot) && !string.IsNullOrWhiteSpace(tempClearsPath))
+            return;
+
+        folderRoot = Application.persistentDataPath;
+        tempClearsPath = Path.Combine(folderRoot, "tempClears");
+        Directory.CreateDirectory(folderRoot);
+        Directory.CreateDirectory(tempClearsPath);
+    }
     
     private StringBuilder outputBuilder = new StringBuilder();
     private void addLogFromMainThread(string msg)
@@ -143,6 +155,8 @@ public class uiEvents : MonoBehaviour
 
     private async void OnEnable()
     {
+        InitializeStoragePaths();
+
         VisualElement root = GetComponent<UIDocument>().rootVisualElement;
         //_tree = root.Q<MultiColumnTreeView>("TreeControl");
         _outputTextField = root.Q<TextField>("outputText");
