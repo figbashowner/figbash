@@ -86,16 +86,77 @@ namespace Assets
 
         private void OnDataChanged()
         {
-
-            var filteredTree = filter == null ? 
-                                                DataManager.Instance.StlTree : 
-                                                DataManager.Instance.StlTree.Where(f => f.data.FullPath.Contains(filter)).First().children.Where(c => c.data.Name[0] == filter[0] && c.data.Name[1] != '1').ToList();
+            var filteredTree = filter == null
+                ? DataManager.Instance.StlTree
+                : GetFilteredTree(filter);
             tree.SetRootItems(filteredTree);
 
             
             if (filter != null)
                 tree.ExpandAll();
             tree.RefreshItems();
+        }
+
+        private static List<TreeViewItemData<ITreeItem>> GetFilteredTree(string filterValue)
+        {
+            var nextId = 0;
+            var filteredTree = new List<TreeViewItemData<ITreeItem>>();
+
+            foreach (var root in DataManager.Instance.StlTree)
+            {
+                if (TryFilterNode(root, filterValue, ref nextId, out var filteredNode))
+                {
+                    filteredTree.Add(filteredNode);
+                }
+            }
+
+            return filteredTree;
+        }
+
+        private static bool TryFilterNode(TreeViewItemData<ITreeItem> node, string filterValue, ref int nextId, out TreeViewItemData<ITreeItem> filteredNode)
+        {
+            var filteredChildren = new List<TreeViewItemData<ITreeItem>>();
+            if (node.children != null)
+            {
+                foreach (var child in node.children)
+                {
+                    if (TryFilterNode(child, filterValue, ref nextId, out var filteredChild))
+                    {
+                        filteredChildren.Add(filteredChild);
+                    }
+                }
+            }
+
+            if (!NodeMatchesFilter(node.data, filterValue) && filteredChildren.Count == 0)
+            {
+                filteredNode = default;
+                return false;
+            }
+
+            filteredNode = filteredChildren.Count > 0
+                ? new TreeViewItemData<ITreeItem>(++nextId, node.data, filteredChildren)
+                : new TreeViewItemData<ITreeItem>(++nextId, node.data);
+            return true;
+        }
+
+        private static bool NodeMatchesFilter(ITreeItem item, string filterValue)
+        {
+            if (item == null || string.IsNullOrWhiteSpace(filterValue))
+                return false;
+
+            if (!string.IsNullOrWhiteSpace(item.Name) &&
+                item.Name.IndexOf(filterValue, StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(item.FullPath) &&
+                item.FullPath.IndexOf(filterValue, StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

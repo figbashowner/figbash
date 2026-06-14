@@ -4,11 +4,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Security.Cryptography;
+using System.Reflection;
 using System.Threading.Tasks;
 using Unity.Properties;
 using Unity.VisualScripting;
+using Newtonsoft.Json;
 
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UIElements;
@@ -20,7 +22,7 @@ namespace Assets
     public partial class RepoTab : VisualElement
     {
         private MultiColumnListView list;
-        private Button _importButton;
+        private Button _addRepoButton;
 
         public RepoTab()
         {
@@ -31,8 +33,8 @@ namespace Assets
                 VisualTreeAsset uiAsset = Resources.Load<VisualTreeAsset>("RepoTab");
                 uiAsset.CloneTree(this);
 
-                _importButton = this.Q<Button>("ImportButton");
-                _importButton.RegisterCallback<ClickEvent>(HandleImportButtonClick);
+                _addRepoButton = this.Q<Button>("AddRepoButton");
+                _addRepoButton.RegisterCallback<ClickEvent>(HandleImportButtonClick);
                 DataManager.Instance.OnDataChanged += OnDataChanged;
 
             });
@@ -49,12 +51,79 @@ namespace Assets
 
         private void HandleImportButtonClick(ClickEvent evt)
         {
+            var owner = GetRootOwner();
+            PromptDialog.ShowChoice(
+                owner,
+                "Add Repository",
+                "Choose whether the repository lives on disk or at a URL.",
+                "Local directory",
+                () => HandleLocalDirectory(owner),
+                "URL",
+                () => PromptForUrl(owner));
+        }
+
+        private VisualElement GetRootOwner()
+        {
             var p = this.parent;
-            while (p.parent != null) 
+            while (p != null && p.parent != null)
             {
                 p = p.parent;
             }
-            PromptDialog.Show(p, "Enter Repo URL", "Enter the URL of the desired repository", "", (url) =>
+            return p ?? this;
+        }
+
+        private void HandleLocalDirectory(VisualElement owner)
+        {
+            var results = StandaloneFileBrowser.OpenFolderPanel(
+                "Select Repository Folder",
+                uiEvents.previousFolder,
+                false);
+
+            if (results == null || results.Length == 0)
+                return;
+
+            var directory = results[0];
+            if (string.IsNullOrWhiteSpace(directory))
+                return;
+
+            uiEvents.previousFolder = directory;
+            var catalogPath = Path.Combine(directory, "catalog.json");
+            if (!File.Exists(catalogPath))
+            {
+                Debug.LogError($"Could not find catalog.json in repository folder: {directory}");
+                return;
+            }
+
+            try
+            {
+                var catalog = JsonConvert.DeserializeObject<Folder>(File.ReadAllText(catalogPath));
+                if (catalog == null)
+                {
+                    Debug.LogError($"Repository catalog at {catalogPath} was empty or invalid.");
+                    return;
+                }
+
+                ResolveCatalogPaths(catalog, directory);
+                DataManager.Instance.AddRepo(catalog);
+                SelectAllTab(owner);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex);
+            }
+        }
+
+        private void PromptForUrl(VisualElement owner)
+        {
+            PromptDialog.Show(owner, "Enter Repo URL", "Enter the URL of the desired repository catalog.", "", url => LoadRepoFromUrl(url, owner), "Load", "Cancel");
+        }
+
+        private void LoadRepoFromUrl(string url, VisualElement owner)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+                return;
+
+            try
             {
                 using (UnityWebRequest www = UnityWebRequest.Get(url))
                 {
@@ -63,16 +132,206 @@ namespace Assets
                     {
                     }
 
-                    if (www.result == UnityWebRequest.Result.Success)
+                    if (www.result != UnityWebRequest.Result.Success)
                     {
-                        DataManager.Instance.AddRepo(url, www.downloadHandler.text);
+                        Debug.LogError($"Failed to download repository catalog from {url}: {www.error}");
+                        return;
                     }
-                    else
-                    {
 
+                    var catalog = JsonConvert.DeserializeObject<Folder>(www.downloadHandler.text);
+                    if (catalog == null)
+                    {
+                        Debug.LogError($"Repository catalog at {url} was empty or invalid.");
+                        return;
                     }
+
+                    var cacheRoot = GetRepoCacheRoot(url);
+                    File.WriteAllText(Path.Combine(cacheRoot, "catalog.json"), www.downloadHandler.text);
+                    DownloadRepoFiles(new Uri(url), catalog, cacheRoot);
+                    ResolveCatalogPaths(catalog, cacheRoot);
+                    DataManager.Instance.AddRepo(catalog);
+                    SelectAllTab(owner);
                 }
-            });
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex);
+            }
+        }
+
+        private static string GetRepoCacheRoot(string sourceUrl)
+        {
+            byte[] hash;
+            using (var sha256 = SHA256.Create())
+            {
+                hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(sourceUrl));
+            }
+            var hashString = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+            var cacheRoot = Path.Combine(uiEvents.folderRoot, "repos", hashString);
+            Directory.CreateDirectory(cacheRoot);
+            return cacheRoot;
+        }
+
+        private static void DownloadRepoFiles(Uri baseUri, Folder folder, string cacheRoot)
+        {
+            if (folder.Subdirs != null)
+            {
+                foreach (var subdir in folder.Subdirs)
+                {
+                    DownloadRepoFiles(baseUri, subdir, cacheRoot);
+                }
+            }
+
+            if (folder.Files == null)
+                return;
+
+            foreach (var file in folder.Files)
+            {
+                if (string.IsNullOrWhiteSpace(file.FullPath))
+                    continue;
+
+                var relativePath = file.FullPath.Replace('/', Path.DirectorySeparatorChar);
+                var localPath = Path.Combine(cacheRoot, relativePath);
+                var localDirectory = Path.GetDirectoryName(localPath);
+                if (!string.IsNullOrWhiteSpace(localDirectory))
+                {
+                    Directory.CreateDirectory(localDirectory);
+                }
+
+                if (File.Exists(localPath))
+                    continue;
+
+                var fileUri = new Uri(baseUri, file.FullPath);
+                using (UnityWebRequest www = UnityWebRequest.Get(fileUri.AbsoluteUri))
+                {
+                    www.SendWebRequest();
+                    while (www.result == UnityWebRequest.Result.InProgress)
+                    {
+                    }
+
+                    if (www.result != UnityWebRequest.Result.Success)
+                    {
+                        Debug.LogError($"Failed to download repository file {fileUri}: {www.error}");
+                        continue;
+                    }
+
+                    File.WriteAllBytes(localPath, www.downloadHandler.data);
+                }
+            }
+        }
+
+        private static void ResolveCatalogPaths(Folder folder, string rootPath)
+        {
+            if (folder == null)
+                return;
+
+            ResolveFolderPath(folder, rootPath);
+        }
+
+        private static void SelectAllTab(VisualElement owner)
+        {
+            if (owner == null)
+                return;
+
+            var tabView = owner.Q<TabView>("tabView");
+            var allTab = owner.Q<Tab>("AllTab");
+            if (tabView == null || allTab == null)
+                return;
+
+            if (TrySelectTabViaReflection(tabView, allTab))
+                return;
+
+            Debug.LogWarning("Could not switch to the All tab after adding a repository.");
+        }
+
+        private static bool TrySelectTabViaReflection(TabView tabView, Tab allTab)
+        {
+            var tabViewType = tabView.GetType();
+
+            foreach (var propertyName in new[] { "activeTab", "selectedTab" })
+            {
+                var property = tabViewType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (property == null || !property.CanWrite)
+                    continue;
+
+                if (property.PropertyType.IsAssignableFrom(allTab.GetType()))
+                {
+                    property.SetValue(tabView, allTab);
+                    return true;
+                }
+            }
+
+            foreach (var propertyName in new[] { "activeTabIndex", "selectedTabIndex" })
+            {
+                var property = tabViewType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (property == null || !property.CanWrite || property.PropertyType != typeof(int))
+                    continue;
+
+                property.SetValue(tabView, 0);
+                return true;
+            }
+
+            foreach (var methodName in new[] { "SetActiveTab", "SetSelectedTab" })
+            {
+                var method = tabViewType.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (method == null)
+                    continue;
+
+                var parameters = method.GetParameters();
+                if (parameters.Length != 1)
+                    continue;
+
+                if (parameters[0].ParameterType.IsAssignableFrom(allTab.GetType()))
+                {
+                    method.Invoke(tabView, new object[] { allTab });
+                    return true;
+                }
+
+                if (parameters[0].ParameterType == typeof(int))
+                {
+                    method.Invoke(tabView, new object[] { 0 });
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static void ResolveFolderPath(Folder folder, string rootPath)
+        {
+            if (folder == null)
+                return;
+
+            if (string.IsNullOrWhiteSpace(folder.FullPath))
+            {
+                folder.FullPath = rootPath;
+            }
+            else if (!Path.IsPathRooted(folder.FullPath))
+            {
+                folder.FullPath = Path.GetFullPath(Path.Combine(rootPath, folder.FullPath.Replace('/', Path.DirectorySeparatorChar)));
+            }
+
+            if (folder.Subdirs != null)
+            {
+                foreach (var subdir in folder.Subdirs)
+                {
+                    ResolveFolderPath(subdir, rootPath);
+                }
+            }
+
+            if (folder.Files == null)
+                return;
+
+            foreach (var file in folder.Files)
+            {
+                if (string.IsNullOrWhiteSpace(file.FullPath))
+                    continue;
+
+                if (!Path.IsPathRooted(file.FullPath))
+                {
+                    file.FullPath = Path.GetFullPath(Path.Combine(rootPath, file.FullPath.Replace('/', Path.DirectorySeparatorChar)));
+                }
+            }
         }
 
                 

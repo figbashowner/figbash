@@ -18,9 +18,12 @@ namespace Assets
     {
         private class Repository
         {
-            public string Url;
+            public string Source;
+            public Folder CatalogRoot;
         }
         private static readonly DataManager _instance= new DataManager();
+        private int _nextTreeIndex = 0;
+        private readonly List<Repository> _repositories = new List<Repository>();
 
         public static DataManager Instance
         {
@@ -51,8 +54,10 @@ namespace Assets
         public void Load(string path)
 
         {
+            _nextTreeIndex = 0;
             int id = 0;
             StlTree = GetFolderList(path, ref id);
+            _nextTreeIndex = id;
             AllClears = GetClears(path);
             if (OnDataChanged != null)
                 OnDataChanged();
@@ -87,6 +92,31 @@ namespace Assets
                     FullPath = subfile.FullName,
                 }));
             }
+            return allChildren;
+        }
+
+        private static List<TreeViewItemData<ITreeItem>> GetFolderList(Folder folder, ref int id)
+        {
+            List<TreeViewItemData<ITreeItem>> allChildren = new List<TreeViewItemData<ITreeItem>>();
+            if (folder == null)
+                return allChildren;
+
+            if (folder.Subdirs != null)
+            {
+                foreach (var subdir in folder.Subdirs)
+                {
+                    allChildren.Add(new TreeViewItemData<ITreeItem>(++id, subdir, GetFolderList(subdir, ref id)));
+                }
+            }
+
+            if (folder.Files != null)
+            {
+                foreach (var subfile in folder.Files)
+                {
+                    allChildren.Add(new TreeViewItemData<ITreeItem>(++id, subfile));
+                }
+            }
+
             return allChildren;
         }
         /*
@@ -133,6 +163,78 @@ namespace Assets
                 }
             }
             return allChildren;
+        }
+
+        public static List<ITreeItem> GetClears(Folder folder)
+        {
+            List<ITreeItem> allChildren = new List<ITreeItem>();
+            CollectClears(folder, allChildren);
+            return allChildren;
+        }
+
+        private static void CollectClears(Folder folder, List<ITreeItem> allChildren)
+        {
+            if (folder == null)
+                return;
+
+            if (folder.Subdirs != null)
+            {
+                foreach (var subdir in folder.Subdirs)
+                {
+                    CollectClears(subdir, allChildren);
+                }
+            }
+
+            if (folder.Files == null)
+                return;
+
+            foreach (var subfile in folder.Files)
+            {
+                if (subfile == null)
+                    continue;
+
+                if (hiddenFiles.Contains(subfile.Name))
+                    continue;
+                if (subfile.Name.ContainsInsensitive("clear"))
+                {
+                    allChildren.Add(subfile);
+                }
+            }
+        }
+
+        public void AddRepo(Folder catalogRoot)
+        {
+            if (catalogRoot == null)
+                return;
+
+            _repositories.Add(new Repository()
+            {
+                Source = catalogRoot.FullPath,
+                CatalogRoot = catalogRoot,
+            });
+
+            var id = _nextTreeIndex;
+            var repoChildren = GetFolderList(catalogRoot, ref id);
+            if (repoChildren.Count == 0)
+                return;
+
+            var repoTitle = string.IsNullOrWhiteSpace(catalogRoot.Name)
+                ? (!string.IsNullOrWhiteSpace(catalogRoot.FullPath) ? Path.GetFileName(catalogRoot.FullPath) : "Repository")
+                : catalogRoot.Name;
+
+            var repoRoot = new TreeViewItemData<ITreeItem>(++id, new Folder()
+            {
+                Name = repoTitle,
+                FullPath = catalogRoot.FullPath,
+            }, repoChildren);
+
+            StlTree.Add(repoRoot);
+            _nextTreeIndex = id;
+
+            AllClears.AddRange(GetClears(catalogRoot));
+
+            if (OnDataChanged != null)
+                OnDataChanged();
         }
         public void ApplyTransfroms(StlFile stl)
         {
@@ -216,12 +318,14 @@ namespace Assets
 
         internal void AddRepo(string url, string text)
         {
-//            StlTree.Add(JsonConvert.DeserializeObject<Folder>(text));
-            if (OnDataChanged != null)
-                OnDataChanged();
-            //JsonUtility.FromJson<Folder>(text);
-            int tmp = 4;
+            if (string.IsNullOrWhiteSpace(text))
+                return;
 
+            var catalogRoot = JsonConvert.DeserializeObject<Folder>(text);
+            if (catalogRoot == null)
+                return;
+
+            AddRepo(catalogRoot);
         }
     }
 }

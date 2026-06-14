@@ -1,0 +1,63 @@
+{
+    "Name": "Sample Local Repo",
+    "FullPath": "",
+    "Subdirs": [
+        {
+            "Name": "200.head",
+            "FullPath": "200.head",
+            "Files": [
+                {
+                    "Name": "200_crown.stl",
+                    "FullPath": "200.head/200_crown.stl",
+                    "SelectionCanChange": true
+                }
+            ]
+        },
+        {
+            "Name": "300.torso",
+            "FullPath": "300.torso",
+            "Files": [
+                {
+                    "Name": "300_torso_plate.stl",
+                    "FullPath": "300.torso/300_torso_plate.stl",
+                    "SelectionCanChange": true
+                }
+            ]
+        },
+        {
+            "Name": "400.legs",
+            "FullPath": "400.legs",
+            "Files": [
+                {
+                    "Name": "400_leg_guard.stl",
+                    "FullPath": "400.legs/400_leg_guard.stl",
+                    "SelectionCanChange": true
+                }
+            ]
+        },
+        {
+            "Name": "800.accessories",
+            "FullPath": "800.accessories",
+            "Subdirs": [
+                {
+                    "Name": "trinkets",
+                    "FullPath": "800.accessories/trinkets",
+                    "Files": [
+                        {
+                            "Name": "800_charm.stl",
+                            "FullPath": "800.accessories/trinkets/800_charm.stl",
+                            "SelectionCanChange": true
+                        }
+                    ]
+                }
+            ],
+            "Files": [
+                {
+                    "Name": "800_hat.stl",
+                    "FullPath": "800.accessories/800_hat.stl",
+                    "SelectionCanChange": true
+                }
+            ]
+        }
+    ]
+}
