@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using UnityEngine.EventSystems;
 using UnityEngine;
 using static UnityEngine.GraphicsBuffer;
 
@@ -30,8 +29,9 @@ public class SimpleCameraController : MonoBehaviour
     void Update()
     {
         var overUi = IsPointerOverUi();
+        var cameraInputBlocked = overUi || UiInputCaptureState.IsTextInputFocused;
 
-        if (overUi)
+        if (cameraInputBlocked)
         {
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
@@ -56,7 +56,7 @@ public class SimpleCameraController : MonoBehaviour
 
         //Keyboard commands
         //float f = 0.0f;
-        Vector3 p = GetBaseInput();
+        Vector3 p = GetBaseInput(cameraInputBlocked);
         if (p.sqrMagnitude > 0)
         { // only move while a direction key is pressed
 
@@ -87,7 +87,7 @@ public class SimpleCameraController : MonoBehaviour
 
     private static bool IsPointerOverUi()
     {
-        return EventSystem.current != null && EventSystem.current.IsPointerOverGameObject();
+        return UiInputCaptureState.IsPointerOverTabView;
     }
 
     private void ApplyOrbit(float angleDelta)
@@ -107,10 +107,10 @@ public class SimpleCameraController : MonoBehaviour
         leftDragActive = false;
     }
 
-    private Vector3 GetMouseDragInput(bool overUi)
+    private Vector3 GetMouseDragInput(bool cameraInputBlocked)
     {
 
-        if (overUi || !Input.GetMouseButton(0) || Input.GetMouseButton(1))
+        if (cameraInputBlocked || !Input.GetMouseButton(0) || Input.GetMouseButton(1))
         {
             if (leftDragActive)
             {
@@ -141,15 +141,19 @@ public class SimpleCameraController : MonoBehaviour
         return pVelocity;
     }
 
-    private Vector3 GetBaseInput()
+    private Vector3 GetBaseInput(bool cameraInputBlocked)
 
     { //returns the basic values, if it's 0 than it's not active.
-        var scrollDirection = Input.GetAxis("Mouse ScrollWheel");
+        Vector3 p_Velocity = GetMouseDragInput(cameraInputBlocked);
+        if (cameraInputBlocked)
+        {
+            return p_Velocity;
+        }
+
+        var scrollDirection = IsPointerOverUi() ? 0 : Input.GetAxis("Mouse ScrollWheel");
         //UnityEngine.Debug.Log($"Scroll axis is {scrollDirection}");
-        var overUi = IsPointerOverUi();
 
         var scrollMultiplier = 20;
-        Vector3 p_Velocity = GetMouseDragInput(overUi);
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow) || scrollDirection > 0)
         {
             p_Velocity += new Vector3(0, 0, 1 * (scrollDirection != 0 ? scrollMultiplier : 1));

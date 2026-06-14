@@ -47,6 +47,7 @@ public partial class PromptDialog : VisualElement
 
         var inputText = new TextField();
         inputText.value = pText;
+        UiInputCaptureState.TrackTextInput(inputText);
         window.Add(inputText);
 
         Action okCallback = () =>

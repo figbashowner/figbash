@@ -160,6 +160,7 @@ public class uiEvents : MonoBehaviour
         VisualElement root = GetComponent<UIDocument>().rootVisualElement;
         //_tree = root.Q<MultiColumnTreeView>("TreeControl");
         _outputTextField = root.Q<TextField>("outputText");
+        UiInputCaptureState.TrackTextInput(_outputTextField);
         //_clearDropdown = root.Q<DropdownField>("ClearDropdown");
         //_clearLabel = root.Q<Label>("ClearLabel");
         _exitButton = root.Q<Button>("Exit");
@@ -170,6 +171,8 @@ public class uiEvents : MonoBehaviour
         _generateFigureDialog = root.Q<GenerateFigureDialog>("GenerateFigureDialogControl");
         _allSelectorTab = root.Q<SelectorTab>("AllSelectorTab");
         _tabView = root.Q<TabView>("tabView");
+        UiInputCaptureState.TrackPointerHover(_tabView);
+        UiInputCaptureState.TrackPointerHover(_allSelectorTab);
         _tabView.activeTabChanged += _tabView_activeTabChanged;
         _showOutputButton = root.Q<Button>("showOutput");
         _showOutputButton.RegisterCallback<ClickEvent>((evt) =>
