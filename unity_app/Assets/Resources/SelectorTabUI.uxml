@@ -1,6 +1,6 @@
 <engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" xmlns:ui="UnityEngine.UIElements" noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Assets.SelectorListControl name="SelectorListControl" style="flex-shrink: 1; flex-grow: 0.3; overflow: hidden; max-height: 30%;" />
-    <engine:MultiColumnTreeView fixed-item-height="30" name="TreeControl" horizontalScrollingEnabled="true" focusable="false" auto-expand="true" style="max-height: none; min-height: auto; overflow: hidden;">
+    <Assets.SelectorListControl name="SelectorListControl" style="flex-shrink: 0; flex-grow: 0; overflow: hidden; max-height: 30%; min-height: 25%;" />
+    <engine:MultiColumnTreeView fixed-item-height="30" name="TreeControl" horizontalScrollingEnabled="true" focusable="false" auto-expand="true" style="flex-grow: 1; flex-shrink: 1; min-height: 0; overflow: hidden;">
         <engine:Columns>
             <engine:Column name="name" title="Name" width="80%" resizable="true" min-width="260px" />
             <engine:Column name="selected" title="Add" width="20%" />

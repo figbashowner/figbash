@@ -27,15 +27,403 @@
 
 .unity-tab-view__content-container {
     flex-grow: 1;
-    flex-shrink: 0;
+    flex-shrink: 1;
+    min-height: 0;
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background-color: rgb(18, 23, 31);
+    overflow: hidden;
 }
 
+.tab-pane {
+    background-color: rgb(18, 23, 31);
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+}
 
-.unity-multi-column-header__column {
+Tab > .unity-tab__content-container,
+.unity-tab__content-container {
+    background-color: rgb(18, 23, 31);
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+    overflow: hidden;
+}
+
+Tab,
+.unity-tab {
+    margin-right: 4px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+Tab:checked,
+.unity-tab:checked {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+Tab .unity-tab__header,
+.unity-tab__header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    height: 22px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    overflow: hidden;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    background-color: rgb(27, 33, 43);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(48, 58, 74);
+    border-right-color: rgb(48, 58, 74);
+    border-top-color: rgb(48, 58, 74);
+    border-bottom-color: rgb(48, 58, 74);
+}
+
+Tab:hover .unity-tab__header,
+.unity-tab__header:hover {
+    background-color: rgb(32, 39, 50);
+    border-left-color: rgb(64, 79, 100);
+    border-right-color: rgb(64, 79, 100);
+    border-top-color: rgb(64, 79, 100);
+    border-bottom-color: rgb(64, 79, 100);
+}
+
+Tab:checked .unity-tab__header,
+.unity-tab__header:checked {
+    background-color: rgb(35, 43, 56);
+    border-left-color: rgb(76, 99, 126);
+    border-right-color: rgb(76, 99, 126);
+    border-top-color: rgb(76, 99, 126);
+    border-bottom-color: rgb(76, 99, 126);
+}
+
+Tab .unity-tab__header-underline,
+.unity-tab__header-underline {
+    height: 3px;
+    border-top-left-radius: 2px;
+    border-top-right-radius: 2px;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+Tab:checked .unity-tab__header-underline,
+.unity-tab__header:checked .unity-tab__header-underline {
+    background-color: rgb(51, 187, 187);
+}
+
+Tab .unity-tab__header-label,
+.unity-tab__header-label {
+    padding-left: 4px;
+    padding-right: 4px;
+    color: rgb(214, 221, 228);
+    -unity-text-align: middle-left;
+    flex-shrink: 1;
+}
+
+Button {
+    -unity-text-align: middle-center;
     background-color: rgb(32, 41, 54);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(61, 75, 94);
+    border-right-color: rgb(61, 75, 94);
+    border-top-color: rgb(61, 75, 94);
+    border-bottom-color: rgb(61, 75, 94);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    min-height: 26px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    color: rgb(232, 238, 244);
+}
+
+Button:hover {
+    background-color: rgb(40, 51, 67);
+    border-left-color: rgb(82, 103, 129);
+    border-right-color: rgb(82, 103, 129);
+    border-top-color: rgb(82, 103, 129);
+    border-bottom-color: rgb(82, 103, 129);
+}
+
+Button:active {
+    background-color: rgb(24, 31, 41);
+}
+
+Button:disabled {
+    opacity: 0.55;
+}
+
+#Generate,
+#AddRepoButton,
+#ImportButton,
+#OpenModalButton {
+    background-color: rgb(28, 165, 164);
+    border-left-color: rgb(52, 203, 201);
+    border-right-color: rgb(52, 203, 201);
+    border-top-color: rgb(52, 203, 201);
+    border-bottom-color: rgb(52, 203, 201);
+    color: rgb(10, 17, 22);
+}
+
+#Generate {
+    margin-right: 8px;
+}
+
+#Generate:hover,
+#AddRepoButton:hover,
+#ImportButton:hover,
+#OpenModalButton:hover {
+    background-color: rgb(47, 184, 183);
+    border-left-color: rgb(76, 222, 219);
+    border-right-color: rgb(76, 222, 219);
+    border-top-color: rgb(76, 222, 219);
+    border-bottom-color: rgb(76, 222, 219);
+}
+
+#Generate:active,
+#AddRepoButton:active,
+#ImportButton:active,
+#OpenModalButton:active {
+    background-color: rgb(22, 132, 132);
+}
+
+#AddRepoButton,
+#ImportButton {
+    width: 100%;
+    align-self: stretch;
+    margin-bottom: 10px;
+}
+
+#Exit {
+    background-color: rgb(107, 45, 56);
+    border-left-color: rgb(157, 79, 91);
+    border-right-color: rgb(157, 79, 91);
+    border-top-color: rgb(157, 79, 91);
+    border-bottom-color: rgb(157, 79, 91);
+    color: rgb(248, 235, 237);
+}
+
+#Exit,
+#LoadFigure,
+#SaveFigure,
+#OpenModalButton {
+    margin-left: 8px;
+}
+
+#Exit:hover {
+    background-color: rgb(131, 57, 69);
+    border-left-color: rgb(182, 95, 109);
+    border-right-color: rgb(182, 95, 109);
+    border-top-color: rgb(182, 95, 109);
+    border-bottom-color: rgb(182, 95, 109);
+}
+
+#Cancel,
+#LoadFigure,
+#SaveFigure,
+#showOutput {
+    background-color: rgb(28, 35, 46);
+    border-left-color: rgb(61, 76, 96);
+    border-right-color: rgb(61, 76, 96);
+    border-top-color: rgb(61, 76, 96);
+    border-bottom-color: rgb(61, 76, 96);
+}
+
+#Cancel {
+    margin-left: 8px;
+}
+
+#Cancel:hover,
+#LoadFigure:hover,
+#SaveFigure:hover,
+#showOutput:hover {
+    background-color: rgb(37, 46, 60);
+    border-left-color: rgb(82, 103, 129);
+    border-right-color: rgb(82, 103, 129);
+    border-top-color: rgb(82, 103, 129);
+    border-bottom-color: rgb(82, 103, 129);
+}
+
+#showOutput {
+    min-height: 24px;
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+TextField,
+FloatField,
+DropdownField {
+    background-color: rgb(19, 24, 32);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(54, 66, 84);
+    border-right-color: rgb(54, 66, 84);
+    border-top-color: rgb(54, 66, 84);
+    border-bottom-color: rgb(54, 66, 84);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    min-height: 28px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
     color: rgb(230, 236, 243);
 }
 
+DropdownField {
+    min-height: 24px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+}
+
+TextField:hover,
+FloatField:hover,
+DropdownField:hover {
+    border-left-color: rgb(76, 99, 126);
+    border-right-color: rgb(76, 99, 126);
+    border-top-color: rgb(76, 99, 126);
+    border-bottom-color: rgb(76, 99, 126);
+}
+
+FloatField .unity-base-field__input,
+FloatField .unity-float-field__input,
+FloatField .unity-text-input {
+    background-color: rgb(19, 24, 32);
+    color: rgb(230, 236, 243);
+}
+
+#outputText {
+    background-color: rgb(14, 18, 24);
+    color: rgb(230, 236, 243);
+    min-height: 120px;
+}
+
+#outputText .unity-base-text-field__input,
+#outputText .unity-text-input,
+#outputText .unity-base-text-field__multiline-container,
+#outputText .unity-base-text-field--scroll-view {
+    background-color: rgb(14, 18, 24);
+    color: rgb(230, 236, 243);
+}
+
+Label {
+    color: rgb(230, 236, 243);
+}
+
+#description {
+    color: rgb(194, 205, 216);
+    margin-bottom: 8px;
+}
+
+Toggle {
+    color: rgb(230, 236, 243);
+    margin-bottom: 4px;
+}
+
+GroupBox,
+RadioButtonGroup {
+    background-color: rgb(22, 28, 36);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(55, 67, 84);
+    border-right-color: rgb(55, 67, 84);
+    border-top-color: rgb(55, 67, 84);
+    border-bottom-color: rgb(55, 67, 84);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    color: rgb(230, 236, 243);
+}
+
+#Progress {
+    background-color: rgb(19, 24, 31);
+    color: rgb(230, 236, 243);
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(57, 70, 88);
+    border-right-color: rgb(57, 70, 88);
+    border-top-color: rgb(57, 70, 88);
+    border-bottom-color: rgb(57, 70, 88);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+    min-height: 20px;
+}
+
+#Progress .unity-progress-bar__container {
+    background-color: rgb(19, 24, 31);
+}
+
+#Progress .unity-progress-bar__title-container {
+    background-color: rgba(0, 0, 0, 0);
+    align-items: center;
+    justify-content: center;
+}
+
+#Progress .unity-progress-bar__title {
+    color: rgb(230, 236, 243);
+    -unity-text-align: middle-center;
+}
+
+#Progress .unity-progress-bar__background {
+    background-color: rgb(14, 18, 24);
+}
+
+#Progress .unity-progress-bar__progress {
+    background-color: rgb(28, 165, 164);
+}
+
+
+.unity-multi-column-header__column,
+.unity-multi-column-header__column:disabled,
+.unity-multi-column-header__column--disabled,
+.unity-multi-column-header__column__disabled,
+.unity-multi-column-header__column-container,
+.unity-multi-column-header__column__title,
+.unity-multi-column-header__column__sort-indicator
+{
+    background-color: rgb(32, 41, 54);
+    color: rgb(230, 236, 243);
+}
+/*
+.unity-multi-column-header__resize-handle-container
+{
+    background-color: rgba(32, 41, 54, 1);
+    color: rgb(230, 236, 243);
+}
+*/
 #SelectedItemsList,
 #TreeControl {
     background-color: rgb(18, 23, 31);
@@ -61,8 +449,7 @@
     padding-bottom: 0px;
 }
 
-#SelectedItemsList .unity-scroll-view__content-container,
-#TreeControl .unity-scroll-view__content-container {
+.unity-scroll-view__content-container {
     background-color: rgba(0, 0, 0, 0);
 }
 
@@ -100,7 +487,43 @@
     background-color: rgba(51, 118, 153, 0.36);
 }
 
-#SelectedItemsList .unity-scroll-view__content-and-vertical-scroll-container,
-#TreeControl .unity-scroll-view__content-and-vertical-scroll-container {
+.unity-scroll-view__content-and-vertical-scroll-container {
     background-color: rgb(18, 23, 31);
+}
+
+.unity-scroller,
+.unity-scroll-view__vertical-scroller,
+.unity-scroll-view__horizontal-scroller {
+    background-color: rgb(21, 27, 36);
+}
+
+.unity-scroller__slider-background,
+.unity-base-slider__tracker {
+    background-color: rgb(27, 33, 43);
+}
+
+.unity-scroller__slider,
+.unity-base-slider__dragger{
+    background-color: rgb(51, 187, 187);
+    border-top-left-radius: 6px;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    border-bottom-left-radius: 6px;
+}
+
+.unity-scroller__slider:hover {
+    background-color: rgb(69, 208, 206);
+}
+
+.unity-scroller__slider:active {
+    background-color: rgb(26, 144, 143);
+}
+
+.unity-scroller__low-button,
+.unity-scroller__high-button {
+    background-color: rgba(0, 0, 0, 0);
+    border-left-width: 0px;
+    border-right-width: 0px;
+    border-top-width: 0px;
+    border-bottom-width: 0px;
 }
