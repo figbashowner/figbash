@@ -269,7 +269,12 @@ Button:disabled {
 
 TextField,
 FloatField,
-DropdownField {
+DropdownField,
+PopupField,
+EnumField,
+.unity-popup-field,
+.unity-enum-field,
+.unity-base-popup-field {
     background-color: rgb(19, 24, 32);
     border-left-width: 1px;
     border-right-width: 1px;
@@ -291,19 +296,116 @@ DropdownField {
     color: rgb(230, 236, 243);
 }
 
-DropdownField {
+DropdownField,
+PopupField,
+EnumField,
+.unity-popup-field,
+.unity-enum-field,
+.unity-base-popup-field {
     min-height: 24px;
     padding-top: 2px;
     padding-bottom: 2px;
+    overflow: hidden;
 }
 
 TextField:hover,
 FloatField:hover,
-DropdownField:hover {
+DropdownField:hover,
+PopupField:hover,
+EnumField:hover,
+.unity-popup-field:hover,
+.unity-enum-field:hover,
+.unity-base-popup-field:hover {
     border-left-color: rgb(76, 99, 126);
     border-right-color: rgb(76, 99, 126);
     border-top-color: rgb(76, 99, 126);
     border-bottom-color: rgb(76, 99, 126);
+}
+
+DropdownField .unity-base-popup-field__label,
+PopupField .unity-base-popup-field__label,
+EnumField .unity-base-popup-field__label,
+.unity-popup-field .unity-base-popup-field__label,
+.unity-enum-field .unity-base-popup-field__label,
+.unity-base-popup-field .unity-base-popup-field__label {
+    color: rgb(194, 205, 216);
+}
+
+DropdownField .unity-base-popup-field__text,
+PopupField .unity-base-popup-field__text,
+EnumField .unity-base-popup-field__text,
+.unity-popup-field .unity-base-popup-field__text,
+.unity-enum-field .unity-base-popup-field__text,
+.unity-base-popup-field .unity-base-popup-field__text,
+DropdownField .unity-popup-field__text,
+PopupField .unity-popup-field__text,
+EnumField .unity-popup-field__text,
+.unity-popup-field .unity-popup-field__text,
+.unity-enum-field .unity-popup-field__text,
+.unity-base-popup-field .unity-popup-field__text,
+DropdownField .unity-enum-field__text,
+PopupField .unity-enum-field__text,
+EnumField .unity-enum-field__text {
+    color: rgb(230, 236, 243);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+DropdownField .unity-base-popup-field__input,
+PopupField .unity-base-popup-field__input,
+EnumField .unity-base-popup-field__input,
+.unity-popup-field .unity-base-popup-field__input,
+.unity-enum-field .unity-base-popup-field__input,
+.unity-base-popup-field .unity-base-popup-field__input,
+DropdownField .unity-popup-field__input,
+PopupField .unity-popup-field__input,
+EnumField .unity-popup-field__input,
+.unity-popup-field .unity-popup-field__input,
+.unity-enum-field .unity-popup-field__input,
+.unity-base-popup-field .unity-popup-field__input,
+DropdownField .unity-enum-field__input,
+PopupField .unity-enum-field__input,
+EnumField .unity-enum-field__input {
+    background-color: rgba(0, 0, 0, 0);
+    flex-grow: 1;
+}
+
+DropdownField .unity-base-popup-field__arrow,
+PopupField .unity-base-popup-field__arrow,
+EnumField .unity-base-popup-field__arrow,
+.unity-popup-field .unity-base-popup-field__arrow,
+.unity-enum-field .unity-base-popup-field__arrow,
+.unity-base-popup-field .unity-base-popup-field__arrow,
+DropdownField .unity-popup-field__arrow,
+PopupField .unity-popup-field__arrow,
+EnumField .unity-popup-field__arrow,
+.unity-popup-field .unity-popup-field__arrow,
+.unity-enum-field .unity-popup-field__arrow,
+.unity-base-popup-field .unity-popup-field__arrow,
+DropdownField .unity-enum-field__arrow,
+PopupField .unity-enum-field__arrow,
+EnumField .unity-enum-field__arrow {
+    background-color: rgba(0, 0, 0, 0);
+    opacity: 0.85;
+}
+
+DropdownField .unity-base-popup-field__arrow:hover,
+PopupField .unity-base-popup-field__arrow:hover,
+EnumField .unity-base-popup-field__arrow:hover,
+.unity-popup-field .unity-base-popup-field__arrow:hover,
+.unity-enum-field .unity-base-popup-field__arrow:hover,
+.unity-base-popup-field .unity-base-popup-field__arrow:hover,
+DropdownField .unity-popup-field__arrow:hover,
+PopupField .unity-popup-field__arrow:hover,
+EnumField .unity-popup-field__arrow:hover,
+.unity-popup-field .unity-popup-field__arrow:hover,
+.unity-enum-field .unity-popup-field__arrow:hover,
+.unity-base-popup-field .unity-popup-field__arrow:hover,
+DropdownField .unity-enum-field__arrow:hover,
+PopupField .unity-enum-field__arrow:hover,
+EnumField .unity-enum-field__arrow:hover {
+    opacity: 1;
 }
 
 FloatField .unity-base-field__input,
@@ -325,6 +427,15 @@ FloatField .unity-text-input {
 #outputText .unity-base-text-field--scroll-view {
     background-color: rgb(14, 18, 24);
     color: rgb(230, 236, 243);
+}
+
+.unity-base-dropdown__checkmark {
+    color: rgb(230, 236, 243);
+    -unity-background-image-tint-color: rgb(230, 236, 243);
+    background-size: 80% 80%;
+    width: 16px;
+    height: 16px;
+    opacity: 1;
 }
 
 Label {
@@ -487,7 +598,8 @@ RadioButtonGroup {
     background-color: rgba(51, 118, 153, 0.36);
 }
 
-.unity-scroll-view__content-and-vertical-scroll-container {
+.unity-scroll-view__content-and-vertical-scroll-container,
+.unity-base-dropdown__container-inner {
     background-color: rgb(18, 23, 31);
 }
 

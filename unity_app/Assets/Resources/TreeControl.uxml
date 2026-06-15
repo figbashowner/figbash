@@ -1,5 +1,5 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
-    <Style src="project://database/Assets/Styles.uss?fileID=7433441132597879392&amp;guid=685fb82c6889f484490d2de1aba5fab5&amp;type=3#Styles" />
+    <Style src="project://database/Assets/UI Toolkit/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=685fb82c6889f484490d2de1aba5fab5&amp;type=3#Styles" />
     <ui:VisualElement name="VisualElement" class="body" style="flex-grow: 1; justify-content: flex-end; right: 0; position: absolute; top: 0; left: 0; bottom: 0;">
         <ui:TabView name="tabView" style="width: auto; flex-grow: 1; flex-shrink: 0; flex-direction: column; justify-content: flex-start; align-content: auto; align-self: auto; position: absolute; top: 0; bottom: 0; left: 0; right: 60%; align-items: stretch; flex-wrap: nowrap;">
             <ui:Tab label="All" name="AllTab" class="tab-pane" style="flex-grow: 1; flex-shrink: 0; bottom: 0; flex-direction: column; flex-basis: auto; align-self: stretch; align-content: auto; height: auto; top: 0; max-height: none; min-height: auto; justify-content: flex-start; align-items: stretch;">
