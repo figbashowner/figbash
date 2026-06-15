@@ -29,3 +29,78 @@
     flex-grow: 1;
     flex-shrink: 0;
 }
+
+
+.unity-multi-column-header__column {
+    background-color: rgb(32, 41, 54);
+    color: rgb(230, 236, 243);
+}
+
+#SelectedItemsList,
+#TreeControl {
+    background-color: rgb(18, 23, 31);
+    flex-grow: 1;
+    flex-shrink: 1;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    border-top-width: 1px;
+    border-bottom-width: 1px;
+    border-left-color: rgb(43, 52, 66);
+    border-right-color: rgb(43, 52, 66);
+    border-top-color: rgb(43, 52, 66);
+    border-bottom-color: rgb(43, 52, 66);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-bottom-left-radius: 10px;
+    overflow: hidden;
+    min-height: 0;
+    padding-left: 0px;
+    padding-right: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+}
+
+#SelectedItemsList .unity-scroll-view__content-container,
+#TreeControl .unity-scroll-view__content-container {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+#SelectedItemsList Label,
+#TreeControl Label {
+    color: rgb(230, 236, 243);
+}
+
+#SelectedItemsList .unity-list-view__item,
+#SelectedItemsList .unity-collection-view__item,
+#SelectedItemsList .unity-tree-view__item,
+#TreeControl .unity-list-view__item,
+#TreeControl .unity-collection-view__item,
+#TreeControl .unity-tree-view__item {
+    background-color: rgba(0, 0, 0, 0);
+}
+
+#SelectedItemsList .unity-list-view__item:hover,
+#SelectedItemsList .unity-collection-view__item:hover,
+#SelectedItemsList .unity-tree-view__item:hover,
+#TreeControl .unity-list-view__item:hover,
+#TreeControl .unity-collection-view__item:hover,
+#TreeControl .unity-tree-view__item:hover {
+    background-color: rgba(51, 118, 153, 0.20);
+}
+
+#SelectedItemsList .unity-list-view__item:selected,
+#SelectedItemsList .unity-collection-view__item:selected,
+#SelectedItemsList .unity-collection-view__item--selected,
+#SelectedItemsList .unity-tree-view__item:selected,
+#TreeControl .unity-list-view__item:selected,
+#TreeControl .unity-collection-view__item:selected,
+#TreeControl .unity-collection-view__item--selected,
+#TreeControl .unity-tree-view__item:selected {
+    background-color: rgba(51, 118, 153, 0.36);
+}
+
+#SelectedItemsList .unity-scroll-view__content-and-vertical-scroll-container,
+#TreeControl .unity-scroll-view__content-and-vertical-scroll-container {
+    background-color: rgb(18, 23, 31);
+}
