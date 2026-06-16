@@ -131,7 +131,8 @@ Tab .unity-tab__header-label,
     flex-shrink: 1;
 }
 
-Button {
+Button,
+.unity-button {
     -unity-text-align: middle-center;
     background-color: rgb(32, 41, 54);
     border-left-width: 1px;
@@ -154,7 +155,13 @@ Button {
     color: rgb(232, 238, 244);
 }
 
-Button:hover {
+Button .unity-button__text,
+.unity-button .unity-button__text {
+    color: rgb(232, 238, 244);
+}
+
+Button:hover,
+.unity-button:hover {
     background-color: rgb(40, 51, 67);
     border-left-color: rgb(82, 103, 129);
     border-right-color: rgb(82, 103, 129);
@@ -162,11 +169,51 @@ Button:hover {
     border-bottom-color: rgb(82, 103, 129);
 }
 
-Button:active {
+Button:active,
+.unity-button:active {
     background-color: rgb(24, 31, 41);
 }
 
-Button:disabled {
+Button:disabled,
+.unity-button:disabled {
+    background-color: rgb(24, 31, 41);
+    opacity: 0.55;
+}
+
+#SelectedItemsList Button,
+#SelectedItemsList .unity-button,
+#TreeControl Button,
+#TreeControl .unity-button {
+    background-image: none;
+    -unity-background-image-tint-color: rgba(0, 0, 0, 0);
+}
+
+#SelectedItemsList Button:hover,
+#SelectedItemsList .unity-button:hover,
+#TreeControl Button:hover,
+#TreeControl .unity-button:hover {
+    background-color: rgb(40, 51, 67);
+    background-image: none;
+    border-left-color: rgb(82, 103, 129);
+    border-right-color: rgb(82, 103, 129);
+    border-top-color: rgb(82, 103, 129);
+    border-bottom-color: rgb(82, 103, 129);
+}
+
+#SelectedItemsList Button:active,
+#SelectedItemsList .unity-button:active,
+#TreeControl Button:active,
+#TreeControl .unity-button:active {
+    background-color: rgb(24, 31, 41);
+    background-image: none;
+}
+
+#SelectedItemsList Button:disabled,
+#SelectedItemsList .unity-button:disabled,
+#TreeControl Button:disabled,
+#TreeControl .unity-button:disabled {
+    background-color: rgb(24, 31, 41);
+    background-image: none;
     opacity: 0.55;
 }
 
@@ -603,17 +650,23 @@ RadioButtonGroup {
     background-color: rgb(18, 23, 31);
 }
 
+Scroller,
 .unity-scroller,
 .unity-scroll-view__vertical-scroller,
-.unity-scroll-view__horizontal-scroller {
+.unity-scroll-view__horizontal-scroller,
+.unity-base-slider {
     background-color: rgb(21, 27, 36);
 }
 
+Scroller .unity-scroller__slider-background,
+Scroller .unity-base-slider__tracker,
 .unity-scroller__slider-background,
 .unity-base-slider__tracker {
     background-color: rgb(27, 33, 43);
 }
 
+Scroller .unity-scroller__slider,
+Scroller .unity-base-slider__dragger,
 .unity-scroller__slider,
 .unity-base-slider__dragger{
     background-color: rgb(51, 187, 187);
@@ -623,14 +676,18 @@ RadioButtonGroup {
     border-bottom-left-radius: 6px;
 }
 
+Scroller .unity-scroller__slider:hover,
 .unity-scroller__slider:hover {
     background-color: rgb(69, 208, 206);
 }
 
+Scroller .unity-scroller__slider:active,
 .unity-scroller__slider:active {
     background-color: rgb(26, 144, 143);
 }
 
+Scroller .unity-scroller__low-button,
+Scroller .unity-scroller__high-button,
 .unity-scroller__low-button,
 .unity-scroller__high-button {
     background-color: rgba(0, 0, 0, 0);
