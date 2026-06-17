@@ -145,6 +145,8 @@ public class uiEvents : MonoBehaviour
     private void addLogFromBg(string msg)
     {
         outputBuilder.AppendLine(msg);
+        if (outputBuilder.Length <= 0)
+            return;
         UniTask.RunOnThreadPool(async () =>
         {
             await UniTask.SwitchToMainThread();

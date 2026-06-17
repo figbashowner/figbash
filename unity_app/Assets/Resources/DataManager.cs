@@ -71,7 +71,7 @@ namespace Assets
             {
                 foreach (var subdir in dinfo.EnumerateDirectories())
                 {
-                    if (subdir.Name == "tempClears" || subdir.Name == "base")
+                    if (subdir.Name == "tempClears" || subdir.Name == "base" || subdir.Name == "repos")
                         continue;
                     allChildren.Add(new TreeViewItemData<ITreeItem>(++id, new Folder()
                     {

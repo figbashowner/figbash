@@ -46,7 +46,7 @@ public partial class PromptDialog : VisualElement
 
         if (_card == null || _titleLabel == null || _descriptionLabel == null || _inputText == null || _buttonRow == null)
         {
-            Debug.LogError("PromptDialog UXML is missing one or more expected elements.");
+            Debug.LogWarning("PromptDialog UXML is missing one or more expected elements.");
             Clear();
             BuildFallback();
             return;
@@ -66,7 +66,7 @@ public partial class PromptDialog : VisualElement
         _template = Resources.Load<VisualTreeAsset>("PromptDialog");
         if (_template == null)
         {
-            Debug.LogError("PromptDialog UXML could not be loaded from Resources/PromptDialog");
+            Debug.LogWarning("PromptDialog UXML could not be loaded from Resources/PromptDialog");
         }
 
         return _template;

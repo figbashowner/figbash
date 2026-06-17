@@ -198,7 +198,7 @@ namespace Parabox.Stl
 			}
 			catch(System.Exception e)
 			{
-				UnityEngine.Debug.LogError(e.ToString());
+				UnityEngine.Debug.LogWarning(e.ToString());
 				return false;
 			}
 

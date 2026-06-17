@@ -90,7 +90,7 @@ namespace Assets
             var catalogPath = Path.Combine(directory, "catalog.json");
             if (!File.Exists(catalogPath))
             {
-                Debug.LogError($"Could not find catalog.json in repository folder: {directory}");
+                Debug.LogWarning($"Could not find catalog.json in repository folder: {directory}");
                 return;
             }
 
@@ -99,7 +99,7 @@ namespace Assets
                 var catalog = JsonConvert.DeserializeObject<Folder>(File.ReadAllText(catalogPath));
                 if (catalog == null)
                 {
-                    Debug.LogError($"Repository catalog at {catalogPath} was empty or invalid.");
+                    Debug.LogWarning($"Repository catalog at {catalogPath} was empty or invalid.");
                     return;
                 }
 
@@ -109,7 +109,7 @@ namespace Assets
             }
             catch (Exception ex)
             {
-                Debug.LogError(ex);
+                Debug.LogWarning(ex);
             }
         }
 
@@ -122,7 +122,8 @@ namespace Assets
         {
             if (string.IsNullOrWhiteSpace(url))
                 return;
-
+            if (url.EndsWith("/catalog.json") == false)
+                url += "/catalog.json";
             try
             {
                 using (UnityWebRequest www = UnityWebRequest.Get(url))
@@ -134,14 +135,16 @@ namespace Assets
 
                     if (www.result != UnityWebRequest.Result.Success)
                     {
-                        Debug.LogError($"Failed to download repository catalog from {url}: {www.error}");
+                        Debug.LogWarning($"Failed to download repository catalog from {url}: {www.error}");
                         return;
                     }
 
                     var catalog = JsonConvert.DeserializeObject<Folder>(www.downloadHandler.text);
+
+
                     if (catalog == null)
                     {
-                        Debug.LogError($"Repository catalog at {url} was empty or invalid.");
+                        Debug.LogWarning($"Repository catalog at {url} was empty or invalid.");
                         return;
                     }
 
@@ -155,7 +158,7 @@ namespace Assets
             }
             catch (Exception ex)
             {
-                Debug.LogError(ex);
+                Debug.LogWarning(ex);
             }
         }
 
@@ -211,7 +214,7 @@ namespace Assets
 
                     if (www.result != UnityWebRequest.Result.Success)
                     {
-                        Debug.LogError($"Failed to download repository file {fileUri}: {www.error}");
+                        Debug.LogWarning($"Failed to download repository file {fileUri}: {www.error}");
                         continue;
                     }
 

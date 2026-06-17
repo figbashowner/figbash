@@ -35,7 +35,7 @@ namespace Assets
                 VisualTreeAsset uiAsset = Resources.Load<VisualTreeAsset>("GenerateFigureDialog");
                 if (uiAsset == null)
                 {
-                    Debug.LogError("GenerateFigureDialog UXML could not be loaded from Resources/GenerateFigureDialog");
+                    Debug.LogWarning("GenerateFigureDialog UXML could not be loaded from Resources/GenerateFigureDialog");
                     return;
                 }
 
