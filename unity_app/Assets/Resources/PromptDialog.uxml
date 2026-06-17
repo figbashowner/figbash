@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI%20Toolkit/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=685fb82c6889f484490d2de1aba5fab5&amp;type=3#Styles" />
+    <ui:VisualElement name="PromptDialogCard" class="panel-card repo-dialog">
+        <ui:Label name="PromptDialogTitle" class="repo-dialog__title" style="display: none;" />
+        <ui:Label name="PromptDialogDescription" class="repo-dialog__description" />
+        <ui:TextField name="PromptDialogInput" class="repo-dialog__input" style="display: none;" />
+        <ui:VisualElement name="PromptDialogButtonRow" class="repo-dialog__button-row" />
+    </ui:VisualElement>
+</ui:UXML>

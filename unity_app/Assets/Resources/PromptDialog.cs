@@ -5,66 +5,205 @@ using UnityEngine.UIElements;
 [UxmlElement]
 public partial class PromptDialog : VisualElement
 {
+    private static VisualTreeAsset _template;
+
+    private VisualElement _card;
+    private Label _titleLabel;
+    private Label _descriptionLabel;
+    private TextField _inputText;
+    private VisualElement _buttonRow;
+
+    public PromptDialog()
+    {
+        AddToClassList("prompt-dialog");
+        style.position = Position.Absolute;
+        pickingMode = PickingMode.Ignore;
+    }
+
     private static PromptDialog CreateWindow()
     {
         var window = new PromptDialog();
-        window.style.position = Position.Absolute;
-        window.style.top = 100;
-        window.style.left = 100;
-        window.style.height = 200;
-        window.style.backgroundColor = new StyleColor(Color.red);
-        window.style.justifyContent = new StyleEnum<Justify>(Justify.SpaceAround);
+        window.InitializeTemplate();
         return window;
     }
 
-    private static void AddButtonRow(VisualElement window, params Button[] buttons)
+    private void InitializeTemplate()
     {
-        var buttonContainer = new VisualElement();
-        buttonContainer.style.flexDirection = new StyleEnum<FlexDirection>(FlexDirection.Row);
-        buttonContainer.style.justifyContent = new StyleEnum<Justify>(Justify.SpaceAround);
+        if (_card != null)
+        {
+            return;
+        }
+
+        var template = LoadTemplate();
+        if (template == null)
+        {
+            BuildFallback();
+            return;
+        }
+
+        template.CloneTree(this);
+        CacheTemplateElements();
+
+        if (_card == null || _titleLabel == null || _descriptionLabel == null || _inputText == null || _buttonRow == null)
+        {
+            Debug.LogError("PromptDialog UXML is missing one or more expected elements.");
+            Clear();
+            BuildFallback();
+            return;
+        }
+
+        _titleLabel.style.display = DisplayStyle.None;
+        _inputText.style.display = DisplayStyle.None;
+    }
+
+    private static VisualTreeAsset LoadTemplate()
+    {
+        if (_template != null)
+        {
+            return _template;
+        }
+
+        _template = Resources.Load<VisualTreeAsset>("PromptDialog");
+        if (_template == null)
+        {
+            Debug.LogError("PromptDialog UXML could not be loaded from Resources/PromptDialog");
+        }
+
+        return _template;
+    }
+
+    private void CacheTemplateElements()
+    {
+        _card = this.Q<VisualElement>("PromptDialogCard");
+        _titleLabel = this.Q<Label>("PromptDialogTitle");
+        _descriptionLabel = this.Q<Label>("PromptDialogDescription");
+        _inputText = this.Q<TextField>("PromptDialogInput");
+        _buttonRow = this.Q<VisualElement>("PromptDialogButtonRow");
+    }
+
+    private void BuildFallback()
+    {
+        Clear();
+
+        _card = new VisualElement();
+        _card.AddToClassList("panel-card");
+        _card.AddToClassList("repo-dialog");
+
+        _titleLabel = new Label();
+        _titleLabel.AddToClassList("repo-dialog__title");
+        _titleLabel.style.display = DisplayStyle.None;
+
+        _descriptionLabel = new Label();
+        _descriptionLabel.AddToClassList("repo-dialog__description");
+
+        _inputText = new TextField();
+        _inputText.AddToClassList("repo-dialog__input");
+        _inputText.style.display = DisplayStyle.None;
+
+        _buttonRow = new VisualElement();
+        _buttonRow.AddToClassList("repo-dialog__button-row");
+
+        _card.Add(_titleLabel);
+        _card.Add(_descriptionLabel);
+        _card.Add(_inputText);
+        _card.Add(_buttonRow);
+        Add(_card);
+    }
+
+    private void SetTitle(string title)
+    {
+        if (_titleLabel == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            _titleLabel.text = string.Empty;
+            _titleLabel.style.display = DisplayStyle.None;
+            return;
+        }
+
+        _titleLabel.text = title;
+        _titleLabel.style.display = DisplayStyle.Flex;
+    }
+
+    private void SetDescription(string description)
+    {
+        if (_descriptionLabel == null)
+        {
+            return;
+        }
+
+        _descriptionLabel.text = description ?? string.Empty;
+    }
+
+    private void SetInput(string text, bool visible)
+    {
+        if (_inputText == null)
+        {
+            return;
+        }
+
+        _inputText.value = text ?? string.Empty;
+        _inputText.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+    }
+
+    private void ClearButtons()
+    {
+        _buttonRow?.Clear();
+    }
+
+    private void AddButtons(params Button[] buttons)
+    {
+        if (_buttonRow == null || buttons == null)
+        {
+            return;
+        }
+
+        ClearButtons();
+
         foreach (var button in buttons)
         {
-            button.style.flexGrow = 1;
-            buttonContainer.Add(button);
+            if (button == null)
+            {
+                continue;
+            }
+
+            button.AddToClassList("repo-dialog__button");
+            _buttonRow.Add(button);
         }
-        window.Add(buttonContainer);
     }
 
     public static void Show(VisualElement owner, string pTitle, string pDescription, string pText, Action<string> successCallback, string pOkButton = "Ok", string pCancelButton = "Cancel")
     {
         string r = null;
         var window = CreateWindow();
-        //window.titleContent = new GUIContent(pTitle);
 
-        if (!string.IsNullOrWhiteSpace(pTitle))
-        {
-            var titleLabel = new Label(pTitle);
-            window.Add(titleLabel);
-        }
-
-        var label = new Label(pDescription);
-        window.Add(label);
-
-        var inputText = new TextField();
-        inputText.value = pText;
-        UiInputCaptureState.TrackTextInput(inputText);
-        window.Add(inputText);
+        window.SetTitle(pTitle);
+        window.SetDescription(pDescription);
+        window.SetInput(pText, true);
 
         Action okCallback = () =>
         {
-            r = inputText.value;
+            r = window._inputText?.value;
             window.Close(owner);
-            successCallback(r);
+            try
+            {
+                successCallback?.Invoke(r);
+            }
+            catch { }
         };
+
         Action cancelCallback = () =>
         {
-            r = inputText.value;
+            r = window._inputText?.value;
             window.Close(owner);
         };
 
         var okButton = new Button(okCallback) { text = pOkButton };
         var cancelButton = new Button(cancelCallback) { text = pCancelButton };
-        AddButtonRow(window, okButton, cancelButton);
+        window.AddButtons(okButton, cancelButton);
 
         window.RegisterCallback<KeyUpEvent>(e =>
         {
@@ -79,39 +218,41 @@ public partial class PromptDialog : VisualElement
             }
         });
 
+        AttachWindow(owner, window);
         window.schedule.Execute(() =>
         {
-            inputText.Focus();
+            window._inputText?.Focus();
         }).ExecuteLater(10);
-
-        owner?.Add(window);
     }
 
     public static void ShowChoice(VisualElement owner, string pTitle, string pDescription, string firstButton, Action firstCallback, string secondButton, Action secondCallback, string pCancelButton = "Cancel")
     {
         var window = CreateWindow();
 
-        if (!string.IsNullOrWhiteSpace(pTitle))
-        {
-            var titleLabel = new Label(pTitle);
-            window.Add(titleLabel);
-        }
-
-        var label = new Label(pDescription);
-        window.Add(label);
+        window.SetTitle(pTitle);
+        window.SetDescription(pDescription);
+        window.SetInput(string.Empty, false);
 
         Action close = () => window.Close(owner);
 
         var first = new Button(() =>
         {
             close();
-            firstCallback?.Invoke();
+            try
+            {
+                firstCallback?.Invoke();
+            }
+            catch { }
         }) { text = firstButton };
 
         var second = new Button(() =>
         {
             close();
-            secondCallback?.Invoke();
+            try
+            {
+                secondCallback?.Invoke();
+            }
+            catch { }
         }) { text = secondButton };
 
         var cancel = new Button(() =>
@@ -119,14 +260,36 @@ public partial class PromptDialog : VisualElement
             close();
         }) { text = pCancelButton };
 
-        AddButtonRow(window, first, second, cancel);
-        owner?.Add(window);
+        window.AddButtons(first, second, cancel);
+        AttachWindow(owner, window);
+    }
+
+    public static void ShowAlert(VisualElement owner, string pTitle, string pDescription, string pOkButton = "OK")
+    {
+        var window = CreateWindow();
+
+        window.SetTitle(pTitle);
+        window.SetDescription(pDescription);
+        window.SetInput(string.Empty, false);
+
+        var okButton = new Button(() => window.Close(owner)) { text = pOkButton };
+        window.AddButtons(okButton);
+        AttachWindow(owner, window);
     }
 
     private void Close(VisualElement owner)
     {
-        this.style.display = DisplayStyle.None;
-        this.RemoveFromHierarchy();
+        RemoveFromHierarchy();
     }
 
+    private static void AttachWindow(VisualElement owner, PromptDialog window)
+    {
+        if (owner == null || window == null)
+        {
+            return;
+        }
+
+        owner.Add(window);
+        window.BringToFront();
+    }
 }
