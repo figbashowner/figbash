@@ -75,8 +75,8 @@ class MyCustomBuildProcessor : IPreprocessBuildWithReport
             var exeDestination = Path.Combine(streamingAssets, Path.GetFileNameWithoutExtension(f) + ".exe");
             regenIfNeeded(Path.Combine(pythonFiles, f), 
                 exeDestination , 
-                "C:\\Users\\User\\AppData\\Local\\Packages\\PythonSoftwareFoundation.Python.3.10_qbz5n2kfra8p0\\LocalCache\\local-packages\\Python310\\Scripts\\pyinstaller.exe", 
-                $" --onefile --collect-submodules \"bpy\" --collect-all \"bpy\"  --hidden-import __future__ --hidden-import future --distpath=\"{streamingAssets}\" \"{Path.Combine(pythonFiles, f)}\" ");
+                "py", 
+                $" -3.13 -m PyInstaller --onefile --collect-submodules \"bpy\" --collect-all \"bpy\"  --hidden-import __future__ --hidden-import future --hidden-import numpy --hidden-import tomllib --distpath=\"{streamingAssets}\" \"{Path.Combine(pythonFiles, f)}\" ");
         }
     }
 }

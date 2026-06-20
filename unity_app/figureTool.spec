@@ -4,7 +4,7 @@ from PyInstaller.utils.hooks import collect_all
 
 datas = []
 binaries = []
-hiddenimports = ['__future__', 'future']
+hiddenimports = ['__future__', 'future', 'numpy', 'tomllib']
 hiddenimports += collect_submodules('bpy')
 tmp_ret = collect_all('bpy')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]

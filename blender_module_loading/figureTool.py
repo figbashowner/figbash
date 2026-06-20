@@ -64,9 +64,9 @@ def export_all_stl(some_collection, dirPathSoFar):
         stl_path = f"{dirPathSoFar}/{filePath}"
 
         myPrint(stl_path)
-        bpy.ops.export_mesh.stl(
+        bpy.ops.wm.stl_export(
                 filepath=str(stl_path),
-                use_selection=True)
+                export_selected_objects=True)
         stl_size = os.path.getsize(stl_path)
         if stl_size > UI_STL_MAX_BYTES:
             target_ratio = UI_STL_MAX_BYTES / stl_size
@@ -84,9 +84,9 @@ def export_ui_stl_sidecar(source_object, stl_path, target_ratio):
     decimate_object(source_object, keep=True, target_ratio=target_ratio)
 
     myPrint(str(sidecar_path))
-    bpy.ops.export_mesh.stl(
+    bpy.ops.wm.stl_export(
             filepath=str(sidecar_path),
-            use_selection=True)
+            export_selected_objects=True)
 
 def unhide_all_collections(children_collection):
     for collection in children_collection:
@@ -103,7 +103,7 @@ def export_from_one_blend_file(blendFile, outputDir):
     bpy.ops.object.select_all(action='DESELECT')
 
     path = Path(outputDir)
-    export_all_stl( bpy.context.scene.collection, path)
+    export_all_stl( bpy.context.scene.collection, path)     
 
 def apply_all_transforms(ob):
     mb = ob.matrix_basis
@@ -222,8 +222,8 @@ command = sys.argv[1]
     apply_cut(obj_base, obj_b, True, False)
     bpy.ops.object.select_all(action = 'DESELECT')
     obj_base.select_set(True)
-    bpy.ops.export_mesh.stl(filepath = output,
-                            use_selection=True)
+    bpy.ops.wm.stl_export(filepath = output,
+                            export_selected_objects=True)
 elif command == "combineAll":
     index = 1 #sys.argv.index("--")
     file_a = sys.argv[index + 1]
@@ -278,8 +278,8 @@ elif command == "combineAll":
         obj_base.rotation_euler[0] = math.radians(270)
     else:
         bpy.ops.wm.save_as_mainfile(filepath=file_out + '.blend')
-    bpy.ops.export_mesh.stl(filepath = file_out,
-                            use_selection=True)
+    bpy.ops.wm.stl_export(filepath = file_out,
+                            export_selected_objects=True)
 
  """
 if command == "exportAll":
@@ -312,8 +312,8 @@ elif command == "applyClearJson":
         obj_base = handle_one_json_child(stlfile)
         obj_base.select_set(True)
     
-    bpy.ops.export_mesh.stl(filepath = output,
-                            use_selection=True)
+    bpy.ops.wm.stl_export(filepath = output,
+                            export_selected_objects=True)
 
 elif command == "combineAllJson":
     jsonfile = sys.argv[2]
@@ -359,5 +359,5 @@ elif command == "combineAllJson":
             myPrint("scaling output by " + str(scale))
             obj_target.scale = scale, scale, scale
         obj_target.rotation_euler[0] = math.radians(270)
-        bpy.ops.export_mesh.stl(filepath = file_out,
-                                use_selection=True)
+        bpy.ops.wm.stl_export(filepath = file_out,
+                                export_selected_objects=True)
