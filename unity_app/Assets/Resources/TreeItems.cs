@@ -56,6 +56,12 @@ namespace Assets
         }
         public Vector3 originalSize { get; set; }
         public string AfterClearsAppliedFullPath { get; set; }
+        public string UiName { get; set; }
+        public string UiPath => string.IsNullOrWhiteSpace(FullPath)
+            ? null
+            : (FullPath.EndsWith(".ui.stl", StringComparison.OrdinalIgnoreCase)
+                ? FullPath
+                : System.IO.Path.ChangeExtension(FullPath, ".ui.stl"));
         public bool IsClear => FullPath.ContainsInsensitive("clear");
         public string ClearToApply { get; set; }
 

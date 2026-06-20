@@ -7,6 +7,8 @@ from mathutils import Euler, Matrix
 import os
 from pathlib import Path
 
+UI_STL_MAX_BYTES = 5 * 1024 * 1024
+
 def myPrint(msg):
     print(msg, end="\r\n", flush=True);
 
@@ -65,9 +67,26 @@ def export_all_stl(some_collection, dirPathSoFar):
         bpy.ops.export_mesh.stl(
                 filepath=str(stl_path),
                 use_selection=True)
+        stl_size = os.path.getsize(stl_path)
+        if stl_size > UI_STL_MAX_BYTES:
+            target_ratio = UI_STL_MAX_BYTES / stl_size
+            export_ui_stl_sidecar(ob, stl_path, target_ratio)
         if orig_hide_state:
             ob.hide_set(True)
         ob.select_set(False)
+
+def export_ui_stl_sidecar(source_object, stl_path, target_ratio):
+    sidecar_path = Path(stl_path).with_suffix(".ui.stl")
+    bpy.ops.object.select_all(action='DESELECT')
+    source_object.select_set(True)
+    bpy.context.view_layer.objects.active = source_object
+
+    decimate_object(source_object, keep=True, target_ratio=target_ratio)
+
+    myPrint(str(sidecar_path))
+    bpy.ops.export_mesh.stl(
+            filepath=str(sidecar_path),
+            use_selection=True)
 
 def unhide_all_collections(children_collection):
     for collection in children_collection:
@@ -130,7 +149,21 @@ def  remesh_object(obj_base, keep):
     bpy.ops.object.modifier_apply(modifier=('mod' + str(modIndex)))
   #myPrint("modifier applied" + apply_obj.name)
 
-#note from ben: this would be easier if you decomposed your code into smaller reusable functions
+def  decimate_object(obj_base, keep, target_ratio):
+  bpy.context.view_layer.objects.active = obj_base
+  myPrint("decimating with ratio " + str(target_ratio))
+  bpy.ops.object.modifier_add(type = 'DECIMATE')
+  modIndex = len(bpy.context.object.modifiers) - 1
+  bpy.context.object.modifiers[modIndex].show_viewport = keep
+  bpy.context.object.modifiers[modIndex].show_render = keep
+  bpy.context.object.modifiers[modIndex].decimate_type = 'COLLAPSE'
+  bpy.context.object.modifiers[modIndex].ratio = target_ratio
+
+  bpy.context.object.modifiers[modIndex].name = ('mod' + str(modIndex))
+  if keep == False:
+    bpy.ops.object.modifier_apply(modifier=('mod' + str(modIndex)))
+  #myPrint("modifier applied" + apply_obj.name)
+
 def handle_one_json_child(stlfile, combining = False, keep = False):
     #print(stlfile["FullPath"])
     #print(stlfile["ClearToApplyFullPath"])

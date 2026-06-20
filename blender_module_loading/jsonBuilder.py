@@ -5,7 +5,7 @@ Usage:
 
 The generated JSON mirrors the Unity Folder/StlFile tree structure:
 - folders are preserved recursively
-- only STL assets are catalogued
+- regular STL assets are catalogued, with matching .ui.stl sidecars recorded on the regular entry
 - generated catalog/breadcrumb files are ignored
 - paths are written relative to ROOT_DIR using forward slashes
 """
@@ -29,6 +29,13 @@ def to_posix_relative(path, root):
     return Path(relative).as_posix()
 
 
+def regular_name_for_ui_sidecar(file_name):
+    lower = file_name.lower()
+    if not lower.endswith(".ui.stl"):
+        return None
+    return file_name[:-7] + ".stl"
+
+
 def build_folder(path, root):
     folder = {
         "Name": path.name,
@@ -37,6 +44,8 @@ def build_folder(path, root):
 
     subdirs = []
     files = []
+    ui_sidecars = {}
+    regular_files = []
 
     with os.scandir(path) as scan:
         entries = sorted(scan, key=lambda entry: entry.name.lower())
@@ -57,6 +66,12 @@ def build_folder(path, root):
         if not entry.is_file(follow_symlinks=False):
             continue
 
+        if entry.name.lower().endswith(".ui.stl"):
+            regular_name = regular_name_for_ui_sidecar(entry.name)
+            if regular_name is not None:
+                ui_sidecars[regular_name.lower()] = entry
+            continue
+
         suffix = Path(entry.name).suffix.lower()
         if suffix not in INCLUDED_FILE_SUFFIXES:
             continue
@@ -65,13 +80,23 @@ def build_folder(path, root):
         if entry.name.lower().startswith("cuts_"):
             continue
 
-        files.append(
-            {
-                "Name": entry.name,
-                "FullPath": to_posix_relative(Path(entry.path), root),
-                "SelectionCanChange": entry.name.lower() != "base.stl",
-            }
+        regular_files.append(
+            (
+                entry,
+                {
+                    "Name": entry.name,
+                    "FullPath": to_posix_relative(Path(entry.path), root),
+                    "SelectionCanChange": entry.name.lower() != "base.stl",
+                },
+            )
         )
+
+    for entry, file_entry in regular_files:
+        ui_entry = ui_sidecars.get(entry.name.lower())
+        if ui_entry is not None:
+            file_entry["UiName"] = ui_entry.name
+
+        files.append(file_entry)
 
     if subdirs:
         folder["Subdirs"] = subdirs

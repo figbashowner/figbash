@@ -9,7 +9,8 @@
                 {
                     "Name": "200_crown.stl",
                     "FullPath": "200.head/200_crown.stl",
-                    "SelectionCanChange": true
+                    "SelectionCanChange": true,
+                    "UiName": "200_crown.ui.stl"
                 }
             ]
         },
@@ -20,7 +21,8 @@
                 {
                     "Name": "300_torso_plate.stl",
                     "FullPath": "300.torso/300_torso_plate.stl",
-                    "SelectionCanChange": true
+                    "SelectionCanChange": true,
+                    "UiName": "300_torso_plate.ui.stl"
                 }
             ]
         },

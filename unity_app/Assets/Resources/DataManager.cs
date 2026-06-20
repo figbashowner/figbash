@@ -45,6 +45,7 @@ namespace Assets
         public static List<string> hiddenFiles = new List<string>() 
         { 
             "base.stl"
+            , "base.ui.stl"
             , "cuts_2.75_0.25.stl"
             , "cuts_3.75_0.25.stl", "cuts_3.75_0.30.stl", "cuts_3.75_0.35.stl"
             , "cuts_6_0.25.stl", "cuts_6_0.30.stl", "cuts_6_0.35.stl"
@@ -82,14 +83,20 @@ namespace Assets
             }
             foreach (var subfile in dinfo.EnumerateFiles())
             {
+                if (subfile.Name.EndsWith(".ui.stl", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
                 if (subfile.Extension != ".stl" || subfile.Name.StartsWith("cuts_"))
                     continue;
+
+                var uiPath = Utils.GetUiSidecarPath(subfile.FullName);
                 allChildren.Add(new TreeViewItemData<ITreeItem>(++id, new StlFile()
                 {
                     Name = subfile.Name,
                     Selected = (subfile.Name == "base.stl"),
                     SelectionCanChange = (subfile.Name != "base.stl"),
                     FullPath = subfile.FullName,
+                    UiName = File.Exists(uiPath) ? Path.GetFileName(uiPath) : null,
                 }));
             }
             return allChildren;
@@ -111,8 +118,27 @@ namespace Assets
 
             if (folder.Files != null)
             {
+                var fileNames = folder.Files
+                    .Where(file => file != null && !string.IsNullOrWhiteSpace(file.Name))
+                    .ToDictionary(file => file.Name, StringComparer.OrdinalIgnoreCase);
+
                 foreach (var subfile in folder.Files)
                 {
+                    if (subfile == null || string.IsNullOrWhiteSpace(subfile.Name))
+                        continue;
+
+                    if (subfile.Name.EndsWith(".ui.stl", StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    if (string.IsNullOrWhiteSpace(subfile.UiName))
+                    {
+                        var uiName = Utils.GetUiSidecarName(subfile.Name);
+                        if (!string.IsNullOrWhiteSpace(uiName) && fileNames.ContainsKey(uiName))
+                        {
+                            subfile.UiName = uiName;
+                        }
+                    }
+
                     allChildren.Add(new TreeViewItemData<ITreeItem>(++id, subfile));
                 }
             }
@@ -151,6 +177,7 @@ namespace Assets
             foreach (var subfile in dinfo.EnumerateFiles())
             {
                 if (subfile.Extension != ".stl"
+                    || subfile.Name.EndsWith(".ui.stl", StringComparison.OrdinalIgnoreCase)
                     || hiddenFiles.Contains(subfile.Name))
                     continue;
                 if (subfile.Name.ContainsInsensitive("clear"))
@@ -193,6 +220,9 @@ namespace Assets
                 if (subfile == null)
                     continue;
 
+                if (subfile.Name.EndsWith(".ui.stl", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
                 if (hiddenFiles.Contains(subfile.Name))
                     continue;
                 if (subfile.Name.ContainsInsensitive("clear"))
@@ -206,6 +236,8 @@ namespace Assets
         {
             if (catalogRoot == null)
                 return;
+
+            Utils.PairUiSidecars(catalogRoot);
 
             _repositories.Add(new Repository()
             {

@@ -156,6 +156,13 @@ namespace Assets
                 return true;
             }
 
+            if (item is StlFile stlFile &&
+                !string.IsNullOrWhiteSpace(stlFile.UiName) &&
+                stlFile.UiName.IndexOf(filterValue, StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return true;
+            }
+
             return false;
         }
     }

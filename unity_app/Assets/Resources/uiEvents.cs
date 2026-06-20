@@ -228,11 +228,13 @@ public class uiEvents : MonoBehaviour
 
         _loadButton.RegisterCallback<ClickEvent>(HandleLoadButtonClick);
         var basePath = Path.Combine(folderRoot, "base.stl");
+        var baseUiPath = Utils.GetUiSidecarPath(basePath);
         var stl = new StlFile()
         {
             Name = Path.GetFileName(basePath),
             FullPath = basePath,
             SelectionCanChange = false,
+            UiName = File.Exists(baseUiPath) ? Path.GetFileName(baseUiPath) : null,
         };
         _baseObject = stlImport.LoadOne(stl);
 

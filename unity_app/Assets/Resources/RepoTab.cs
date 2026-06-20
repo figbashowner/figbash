@@ -103,6 +103,7 @@ namespace Assets
                     return;
                 }
 
+                Utils.PairUiSidecars(catalog);
                 ResolveCatalogPaths(catalog, directory);
                 DataManager.Instance.AddRepo(catalog);
                 SelectAllTab(owner);
@@ -150,6 +151,7 @@ namespace Assets
 
                     var cacheRoot = GetRepoCacheRoot(url);
                     File.WriteAllText(Path.Combine(cacheRoot, "catalog.json"), www.downloadHandler.text);
+                    Utils.PairUiSidecars(catalog);
                     DownloadRepoFiles(new Uri(url), catalog, cacheRoot);
                     ResolveCatalogPaths(catalog, cacheRoot);
                     DataManager.Instance.AddRepo(catalog);
@@ -193,33 +195,49 @@ namespace Assets
                 if (string.IsNullOrWhiteSpace(file.FullPath))
                     continue;
 
-                var relativePath = file.FullPath.Replace('/', Path.DirectorySeparatorChar);
-                var localPath = Path.Combine(cacheRoot, relativePath);
-                var localDirectory = Path.GetDirectoryName(localPath);
-                if (!string.IsNullOrWhiteSpace(localDirectory))
-                {
-                    Directory.CreateDirectory(localDirectory);
-                }
-
-                if (File.Exists(localPath))
+                if (string.IsNullOrWhiteSpace(file.Name))
                     continue;
 
-                var fileUri = new Uri(baseUri, file.FullPath);
-                using (UnityWebRequest www = UnityWebRequest.Get(fileUri.AbsoluteUri))
+                if (file.Name.EndsWith(".ui.stl", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                DownloadRepoFile(baseUri, cacheRoot, file.FullPath);
+
+                if (!string.IsNullOrWhiteSpace(file.UiName))
+                    DownloadRepoFile(baseUri, cacheRoot, Utils.GetUiSidecarPath(file.FullPath));
+            }
+        }
+
+        private static void DownloadRepoFile(Uri baseUri, string cacheRoot, string relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(relativePath))
+                return;
+
+            var localPath = Path.Combine(cacheRoot, relativePath.Replace('/', Path.DirectorySeparatorChar));
+            var localDirectory = Path.GetDirectoryName(localPath);
+            if (!string.IsNullOrWhiteSpace(localDirectory))
+            {
+                Directory.CreateDirectory(localDirectory);
+            }
+
+            if (File.Exists(localPath))
+                return;
+
+            var fileUri = new Uri(baseUri, relativePath);
+            using (UnityWebRequest www = UnityWebRequest.Get(fileUri.AbsoluteUri))
+            {
+                www.SendWebRequest();
+                while (www.result == UnityWebRequest.Result.InProgress)
                 {
-                    www.SendWebRequest();
-                    while (www.result == UnityWebRequest.Result.InProgress)
-                    {
-                    }
-
-                    if (www.result != UnityWebRequest.Result.Success)
-                    {
-                        Debug.LogWarning($"Failed to download repository file {fileUri}: {www.error}");
-                        continue;
-                    }
-
-                    File.WriteAllBytes(localPath, www.downloadHandler.data);
                 }
+
+                if (www.result != UnityWebRequest.Result.Success)
+                {
+                    Debug.LogWarning($"Failed to download repository file {fileUri}: {www.error}");
+                    return;
+                }
+
+                File.WriteAllBytes(localPath, www.downloadHandler.data);
             }
         }
 

@@ -151,8 +151,29 @@ public class stlImport : MonoBehaviour
         var g = GameObject.Find(stl.UiKey);
         if (g == null || ReferenceEquals(g, null) || g.IsDestroyed() || g.activeSelf == false)
         {
+            var loadPath = stl.AfterClearsAppliedFullPath;
+            if (!string.IsNullOrWhiteSpace(loadPath) && File.Exists(loadPath))
+            {
+                var afterClearUiPath = stlImport.GetUiSidecarPath(loadPath);
+                if (!string.IsNullOrWhiteSpace(afterClearUiPath) && File.Exists(afterClearUiPath))
+                    loadPath = afterClearUiPath;
+            }
+            else 
+            {
+                UnityEngine.Debug.LogWarning($"Loading object uiPath {stl.UiPath}");
+                var uiPath = stl.UiPath;
+                if (!string.IsNullOrWhiteSpace(uiPath) && File.Exists(uiPath))
+                    loadPath = uiPath;
+            }
+
+            if (string.IsNullOrWhiteSpace(loadPath) || File.Exists(loadPath) == false)
+            {
+                loadPath = stl.FullPath;
+            }
+            UnityEngine.Debug.LogWarning($"Loading object with path {loadPath}");
+
             var mesh = Parabox.Stl.Importer.Import(
-                stl.AfterClearsAppliedFullPath ?? stl.FullPath,
+                loadPath,
                 Parabox.Stl.CoordinateSpace.Right,
                 Parabox.Stl.UpAxis.Y,
                 false,
@@ -189,5 +210,16 @@ public class stlImport : MonoBehaviour
         {
             return g;
         }
+    }
+
+    private static string GetUiSidecarPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+            return null;
+
+        if (path.EndsWith(".ui.stl", StringComparison.OrdinalIgnoreCase))
+            return path;
+
+        return Path.ChangeExtension(path, ".ui.stl");
     }
 }

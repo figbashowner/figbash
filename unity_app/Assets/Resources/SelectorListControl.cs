@@ -27,7 +27,10 @@ namespace Assets
         public Func<StlFile, bool> filterCallback { get; set; } = null;
         public SelectorListControl()
         {
-            filterCallback = (stl) => filter == null || stl.Name == "base.stl" || stl.FullPath.Contains(filter);
+            filterCallback = (stl) => filter == null
+                || stl.Name == "base.stl"
+                || stl.FullPath.Contains(filter)
+                || (!string.IsNullOrWhiteSpace(stl.UiName) && stl.UiName.Contains(filter));
             RegisterCallback<AttachToPanelEvent>(AttachToPanel);
             RegisterCallback<DetachFromPanelEvent>(e =>
             { /* do something here when element is removed from UI */
