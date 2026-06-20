@@ -10,7 +10,9 @@
                     "Name": "200_crown.stl",
                     "FullPath": "200.head/200_crown.stl",
                     "SelectionCanChange": true,
-                    "UiName": "200_crown.ui.stl"
+                    "Hash": "805639ad543ce20fd5f828c1f41886268ad2fe4e34468f0e86fe88102fef1476",
+                    "UiName": "200_crown.ui.stl",
+                    "UiHash": "805639ad543ce20fd5f828c1f41886268ad2fe4e34468f0e86fe88102fef1476"
                 }
             ]
         },
@@ -22,7 +24,17 @@
                     "Name": "300_torso_plate.stl",
                     "FullPath": "300.torso/300_torso_plate.stl",
                     "SelectionCanChange": true,
-                    "UiName": "300_torso_plate.ui.stl"
+                    "Hash": "6c9a706d6bcaf14f6b76aeff910f1cce554137c56c2b8a6d174bd5abd8badcaf",
+                    "UiName": "300_torso_plate.ui.stl",
+                    "UiHash": "6c9a706d6bcaf14f6b76aeff910f1cce554137c56c2b8a6d174bd5abd8badcaf"
+                },
+                {
+                    "Name": "345.gamer_jacket.stl",
+                    "FullPath": "300.torso/345.gamer_jacket.stl",
+                    "SelectionCanChange": true,
+                    "Hash": "83a4c29d6f555d3b6b299cf2ff13954c1fc151dde3e949519aee8889a91bfa74",
+                    "UiName": "345.gamer_jacket.ui.stl",
+                    "UiHash": "eb18a896e3a57bc0ce9ff31c893aaa4762f949a1e0edbe074372860a4b69b49a"
                 }
             ]
         },
@@ -33,7 +45,16 @@
                 {
                     "Name": "400_leg_guard.stl",
                     "FullPath": "400.legs/400_leg_guard.stl",
-                    "SelectionCanChange": true
+                    "SelectionCanChange": true,
+                    "Hash": "6c9a706d6bcaf14f6b76aeff910f1cce554137c56c2b8a6d174bd5abd8badcaf"
+                },
+                {
+                    "Name": "422.jeans.stl",
+                    "FullPath": "400.legs/422.jeans.stl",
+                    "SelectionCanChange": true,
+                    "Hash": "ee33b7d44b7fcef6ac0e75c0b3479676ace64f8eb5cef7ca916b0cc050039a9c",
+                    "UiName": "422.jeans.ui.stl",
+                    "UiHash": "454d2e61e23f10180d030534585a5bfdf6639784278f6899d174b84586da409a"
                 }
             ]
         },
@@ -48,7 +69,8 @@
                         {
                             "Name": "800_charm.stl",
                             "FullPath": "800.accessories/trinkets/800_charm.stl",
-                            "SelectionCanChange": true
+                            "SelectionCanChange": true,
+                            "Hash": "6c9a706d6bcaf14f6b76aeff910f1cce554137c56c2b8a6d174bd5abd8badcaf"
                         }
                     ]
                 }
@@ -57,7 +79,8 @@
                 {
                     "Name": "800_hat.stl",
                     "FullPath": "800.accessories/800_hat.stl",
-                    "SelectionCanChange": true
+                    "SelectionCanChange": true,
+                    "Hash": "805639ad543ce20fd5f828c1f41886268ad2fe4e34468f0e86fe88102fef1476"
                 }
             ]
         }

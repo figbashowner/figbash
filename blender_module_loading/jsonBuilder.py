@@ -5,12 +5,13 @@ Usage:
 
 The generated JSON mirrors the Unity Folder/StlFile tree structure:
 - folders are preserved recursively
-- regular STL assets are catalogued, with matching .ui.stl sidecars recorded on the regular entry
+- regular STL assets are catalogued, with SHA256 hashes of the file contents for both the main STL and any matching .ui.stl sidecar recorded on the regular entry
 - generated catalog/breadcrumb files are ignored
 - paths are written relative to ROOT_DIR using forward slashes
 """
 
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -34,6 +35,14 @@ def regular_name_for_ui_sidecar(file_name):
     if not lower.endswith(".ui.stl"):
         return None
     return file_name[:-7] + ".stl"
+
+
+def sha256_file_hex(path):
+    digest = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def build_folder(path, root):
@@ -87,6 +96,7 @@ def build_folder(path, root):
                     "Name": entry.name,
                     "FullPath": to_posix_relative(Path(entry.path), root),
                     "SelectionCanChange": entry.name.lower() != "base.stl",
+                    "Hash": sha256_file_hex(Path(entry.path)),
                 },
             )
         )
@@ -95,6 +105,7 @@ def build_folder(path, root):
         ui_entry = ui_sidecars.get(entry.name.lower())
         if ui_entry is not None:
             file_entry["UiName"] = ui_entry.name
+            file_entry["UiHash"] = sha256_file_hex(Path(ui_entry.path))
 
         files.append(file_entry)
 

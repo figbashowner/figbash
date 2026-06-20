@@ -54,9 +54,17 @@ namespace Assets
             Selected = false;
             IsImport = false;
         }
+        [NonSerialized]
+        public string LoadedPath;
+        [NonSerialized]
+        public string SceneKey;
         public Vector3 originalSize { get; set; }
         public string AfterClearsAppliedFullPath { get; set; }
+        public string RepositorySource { get; set; }
+        public string ClearRepositorySource { get; set; }
         public string UiName { get; set; }
+        public string Hash { get; set; }
+        public string UiHash { get; set; }
         public string UiPath => string.IsNullOrWhiteSpace(FullPath)
             ? null
             : (FullPath.EndsWith(".ui.stl", StringComparison.OrdinalIgnoreCase)
@@ -73,21 +81,33 @@ namespace Assets
             {
                 if (IsImport)
                     return Guid.ToString();
-                else
-                    return FullPath + ClearToApply;
+
+                var keyPath = string.IsNullOrWhiteSpace(LoadedPath)
+                    ? (string.IsNullOrWhiteSpace(AfterClearsAppliedFullPath) ? FullPath : AfterClearsAppliedFullPath)
+                    : LoadedPath;
+                return keyPath + ClearToApply;
             }
         }
 
 
-        public BareMinimumStlFile Export()
+        public BareMinimumStlFile Export(bool preferUiPath = false)
         {
             if (IsImport && (Transforms?.PositionRelativeToOriginalSize?.Length == null || Transforms?.PositionRelativeToOriginalSize?.Length == 0))
                 throw new Exception("Import files need to have a PositionRelativeToOriginalSize set");
+            var exportPath = FullPath;
+            if (preferUiPath)
+            {
+                var uiPath = UiPath;
+                if (!string.IsNullOrWhiteSpace(uiPath) && System.IO.File.Exists(uiPath))
+                    exportPath = uiPath;
+            }
             return new BareMinimumStlFile()
             {
-                FullPath = FullPath,
+                FullPath = exportPath,
                 OriginalSize = originalSize,
                 ClearToApplyFullPath = ClearToApply,
+                RepositorySource = RepositorySource,
+                ClearRepositorySource = ClearRepositorySource,
                 transforms = Transforms,
                 IsImport = IsImport
             };
@@ -135,6 +155,8 @@ namespace Assets
     {
         public string FullPath;
         public string ClearToApplyFullPath;
+        public string RepositorySource;
+        public string ClearRepositorySource;
         public Transforms transforms;
         public bool IsImport = false;
 

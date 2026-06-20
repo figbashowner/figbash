@@ -73,6 +73,42 @@
     max-width: 560px;
 }
 
+.repo-shell {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+}
+
+.repo-shell__description {
+    color: rgb(194, 205, 216);
+    margin-bottom: 10px;
+    white-space: normal;
+}
+
+.repo-shell__actions {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+}
+
+.repo-shell__actions > Button {
+    width: auto;
+    flex-grow: 1;
+    margin-left: 8px;
+}
+
+.repo-shell__actions > Button:first-child {
+    margin-left: 0px;
+}
+
+.repo-shell__list {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+}
+
 .repo-dialog__title {
     color: rgb(248, 250, 252);
     font-size: 18px;
@@ -333,7 +369,9 @@ Button:disabled,
 #SelectedItemsList Button,
 #SelectedItemsList .unity-button,
 #TreeControl Button,
-#TreeControl .unity-button {
+#TreeControl .unity-button,
+#RepositoryList Button,
+#RepositoryList .unity-button {
     background-image: none;
     -unity-background-image-tint-color: rgba(0, 0, 0, 0);
 }
@@ -341,7 +379,9 @@ Button:disabled,
 #SelectedItemsList Button:hover,
 #SelectedItemsList .unity-button:hover,
 #TreeControl Button:hover,
-#TreeControl .unity-button:hover {
+#TreeControl .unity-button:hover,
+#RepositoryList Button:hover,
+#RepositoryList .unity-button:hover {
     background-color: rgb(40, 51, 67);
     background-image: none;
     border-left-color: rgb(82, 103, 129);
@@ -353,7 +393,9 @@ Button:disabled,
 #SelectedItemsList Button:active,
 #SelectedItemsList .unity-button:active,
 #TreeControl Button:active,
-#TreeControl .unity-button:active {
+#TreeControl .unity-button:active,
+#RepositoryList Button:active,
+#RepositoryList .unity-button:active {
     background-color: rgb(24, 31, 41);
     background-image: none;
 }
@@ -361,7 +403,9 @@ Button:disabled,
 #SelectedItemsList Button:disabled,
 #SelectedItemsList .unity-button:disabled,
 #TreeControl Button:disabled,
-#TreeControl .unity-button:disabled {
+#TreeControl .unity-button:disabled,
+#RepositoryList Button:disabled,
+#RepositoryList .unity-button:disabled {
     background-color: rgb(24, 31, 41);
     background-image: none;
     opacity: 0.55;
@@ -407,6 +451,14 @@ Button:disabled,
     align-self: stretch;
     margin-bottom: 10px;
 }
+
+#RepoActionRow > Button {
+    width: auto;
+    flex-grow: 1;
+    margin-bottom: 0px;
+    margin-left: 8px;
+}
+
 
 #Exit {
     background-color: rgb(107, 45, 56);
@@ -733,7 +785,8 @@ RadioButtonGroup {
 }
 */
 #SelectedItemsList,
-#TreeControl {
+#TreeControl,
+#RepositoryList {
     background-color: rgb(18, 23, 31);
     flex-grow: 1;
     flex-shrink: 1;
@@ -762,7 +815,8 @@ RadioButtonGroup {
 }
 
 #SelectedItemsList Label,
-#TreeControl Label {
+#TreeControl Label,
+#RepositoryList Label {
     color: rgb(230, 236, 243);
 }
 
@@ -771,7 +825,10 @@ RadioButtonGroup {
 #SelectedItemsList .unity-tree-view__item,
 #TreeControl .unity-list-view__item,
 #TreeControl .unity-collection-view__item,
-#TreeControl .unity-tree-view__item {
+#TreeControl .unity-tree-view__item,
+#RepositoryList .unity-list-view__item,
+#RepositoryList .unity-collection-view__item,
+#RepositoryList .unity-tree-view__item {
     background-color: rgba(0, 0, 0, 0);
 }
 
@@ -780,7 +837,10 @@ RadioButtonGroup {
 #SelectedItemsList .unity-tree-view__item:hover,
 #TreeControl .unity-list-view__item:hover,
 #TreeControl .unity-collection-view__item:hover,
-#TreeControl .unity-tree-view__item:hover {
+#TreeControl .unity-tree-view__item:hover,
+#RepositoryList .unity-list-view__item:hover,
+#RepositoryList .unity-collection-view__item:hover,
+#RepositoryList .unity-tree-view__item:hover {
     background-color: rgba(51, 118, 153, 0.20);
 }
 
@@ -791,7 +851,11 @@ RadioButtonGroup {
 #TreeControl .unity-list-view__item:selected,
 #TreeControl .unity-collection-view__item:selected,
 #TreeControl .unity-collection-view__item--selected,
-#TreeControl .unity-tree-view__item:selected {
+#TreeControl .unity-tree-view__item:selected,
+#RepositoryList .unity-list-view__item:selected,
+#RepositoryList .unity-collection-view__item:selected,
+#RepositoryList .unity-collection-view__item--selected,
+#RepositoryList .unity-tree-view__item:selected {
     background-color: rgba(51, 118, 153, 0.36);
 }
 

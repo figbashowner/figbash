@@ -39,7 +39,7 @@ public class stlImport : MonoBehaviour
     {
         var tempFile = $"{uiEvents.tempClearsPath}/{Path.GetFileName(stlFile.FullPath)}_minus_{Path.GetFileName(stlFile.ClearToApply)}.json";
         Utils.UpdatePositionRelativeToOriginalSize(stlFile);
-        var exportFile = new ExportFile() { children = new List<BareMinimumStlFile>() { stlFile.Export() }.ToArray() };
+        var exportFile = new ExportFile() { children = new List<BareMinimumStlFile>() { stlFile.Export(preferUiPath: true) }.ToArray() };
         var output = JsonUtility.ToJson(exportFile);
         File.WriteAllText(tempFile, output);
         executeApplyClearJsonScript($"\"{tempFile}\" \"{stlFile.AfterClearsAppliedFullPath}\"", logCallback);
@@ -132,6 +132,9 @@ public class stlImport : MonoBehaviour
 
     public static void Unload(string path)
     {
+        if (string.IsNullOrWhiteSpace(path))
+            return;
+
         var g = GameObject.Find(path);
         g?.SetActive(false);
         Destroy(g);
@@ -148,7 +151,13 @@ public class stlImport : MonoBehaviour
     }
     public static GameObject LoadOne(StlFile stl, Vector3? maxSize = null)
     {
-        var g = GameObject.Find(stl.UiKey);
+        var loadKeyPath = ResolveLoadPath(stl);
+        stl.LoadedPath = loadKeyPath;
+
+        var sceneKey = stl.UiKey;
+        stl.SceneKey = sceneKey;
+
+        var g = GameObject.Find(sceneKey);
         if (g == null || ReferenceEquals(g, null) || g.IsDestroyed() || g.activeSelf == false)
         {
             var loadPath = stl.AfterClearsAppliedFullPath;
@@ -180,7 +189,7 @@ public class stlImport : MonoBehaviour
                 UnityEngine.Rendering.IndexFormat.UInt32
                 ).First();
             var result = new GameObject();
-            result.name = stl.UiKey;
+            result.name = sceneKey;
             result.tag = "stl";
             var myScale = scale;
             result.AddComponent<MeshFilter>().sharedMesh = mesh;
@@ -210,6 +219,36 @@ public class stlImport : MonoBehaviour
         {
             return g;
         }
+    }
+
+    private static string ResolveLoadPath(StlFile stl)
+    {
+        if (stl == null)
+            return null;
+
+        if (stl.IsImport)
+        {
+            var importUiPath = GetUiSidecarPath(stl.FullPath);
+            if (!string.IsNullOrWhiteSpace(importUiPath) && File.Exists(importUiPath))
+                return importUiPath;
+
+            return stl.FullPath;
+        }
+
+        if (!string.IsNullOrWhiteSpace(stl.AfterClearsAppliedFullPath) && File.Exists(stl.AfterClearsAppliedFullPath))
+        {
+            var afterClearUiPath = GetUiSidecarPath(stl.AfterClearsAppliedFullPath);
+            if (!string.IsNullOrWhiteSpace(afterClearUiPath) && File.Exists(afterClearUiPath))
+                return afterClearUiPath;
+
+            return stl.AfterClearsAppliedFullPath;
+        }
+
+        var uiPath = stl.UiPath;
+        if (!string.IsNullOrWhiteSpace(uiPath) && File.Exists(uiPath))
+            return uiPath;
+
+        return stl.FullPath;
     }
 
     private static string GetUiSidecarPath(string path)

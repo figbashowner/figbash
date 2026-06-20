@@ -16,6 +16,8 @@ using Parabox.Stl;
 
 public class uiEvents : MonoBehaviour
 {
+    public static uiEvents Instance { get; private set; }
+
     private Label _clearLabel;
     private DropdownField _clearDropdown;
     private MultiColumnTreeView _tree;
@@ -29,9 +31,15 @@ public class uiEvents : MonoBehaviour
     private ImportTab _impotTab;
     private GenerateFigureDialog _generateFigureDialog;
     private SelectorTab _allSelectorTab;
+    private RepoTab _repoTab;
     private TabView _tabView;
     private Button _showOutputButton;
     public static Vector3 CameraLookAtPos = Vector3.zero;
+    private bool _downloadProgressVisible;
+    private VisualElement _progressIndeterminateOverlay;
+    private VisualElement _progressIndeterminateBar;
+    private bool _progressIndeterminate;
+    private float _progressIndeterminatePhase;
 
 
     private static void OnToggleValueChanged(ChangeEvent<bool> evt)
@@ -157,6 +165,7 @@ public class uiEvents : MonoBehaviour
 
     private async void OnEnable()
     {
+        Instance = this;
         InitializeStoragePaths();
 
         VisualElement root = GetComponent<UIDocument>().rootVisualElement;
@@ -167,14 +176,17 @@ public class uiEvents : MonoBehaviour
         //_clearLabel = root.Q<Label>("ClearLabel");
         _exitButton = root.Q<Button>("Exit");
         _progress = root.Q<UnityEngine.UIElements.ProgressBar>("Progress");
+        DownloadManager.ProgressChanged += HandleDownloadProgressChanged;
         _saveButton = root.Q<Button>("SaveFigure");
         _loadButton = root.Q<Button>("LoadFigure");
         _impotTab = root.Q<ImportTab>("ImportTabControl");
         _generateFigureDialog = root.Q<GenerateFigureDialog>("GenerateFigureDialogControl");
         _allSelectorTab = root.Q<SelectorTab>("AllSelectorTab");
+        _repoTab = root.Q<RepoTab>("RepoTabControl");
         _tabView = root.Q<TabView>("tabView");
         UiInputCaptureState.TrackPointerHover(_tabView);
         UiInputCaptureState.TrackPointerHover(_allSelectorTab);
+        InitializeProgressOverlay();
         _tabView.activeTabChanged += _tabView_activeTabChanged;
         _showOutputButton = root.Q<Button>("showOutput");
         _showOutputButton.RegisterCallback<ClickEvent>((evt) =>
@@ -265,14 +277,21 @@ public class uiEvents : MonoBehaviour
         DataManager.Instance.OnAppliedChanged += OnAppliedChanged;
 
         ZoomCameraToTarget(CameraTarget.Full);
+
+        if (_repoTab != null)
+            await _repoTab.LoadSavedRepositoriesAsync();
     }
 
     private void OnDisable()
     {
+        DownloadManager.ProgressChanged -= HandleDownloadProgressChanged;
         if (_generateFigureDialog != null)
         {
             _generateFigureDialog.GenerateRequested -= HandleExportStlClick;
         }
+
+        if (Instance == this)
+            Instance = null;
     }
 
     private void _tabView_activeTabChanged(Tab arg1, Tab arg2)
@@ -310,6 +329,32 @@ public class uiEvents : MonoBehaviour
             if (go != null && stl.Transforms != null && stl.Transforms.Position.Length > 0 && (stl.ClearToApply == null || stl.ClearToApply == string.Empty))
                 ApplyTransformsToObject(stl.Transforms, go);
         }
+    }
+
+    private void HandleDownloadProgressChanged(DownloadProgressState state)
+    {
+        if (_progress == null)
+            return;
+
+        if (!state.Visible)
+        {
+            _downloadProgressVisible = false;
+            if (progressStack <= 0)
+            {
+                _progress.visible = false;
+                _progress.style.display = DisplayStyle.None;
+            }
+            return;
+        }
+
+        _downloadProgressVisible = true;
+        _progress.visible = true;
+        _progress.style.display = DisplayStyle.Flex;
+        _progress.highValue = Math.Max(state.Total, 1);
+        _progress.value = Math.Min(state.Completed, state.Total);
+        _progress.title = string.IsNullOrWhiteSpace(state.Label)
+            ? $"Downloading ({state.Completed}/{state.Total})"
+            : $"{state.Label} ({state.Completed}/{state.Total})";
     }
 
 
@@ -411,6 +456,10 @@ public class uiEvents : MonoBehaviour
                                                     Path.GetFileNameWithoutExtension(path) 
                                                     + Path.GetFileName(cut.CutsFileFullPath).Substring(4));
             }
+
+            if (!await EnsureFigureDownloadsReady(export))
+                return;
+
             var tempFile = $"{uiEvents.tempClearsPath}/{lastFileName}_{toleranceString}.json";
             var exportFile = new ExportFile() { children = export.ToArray() };
             exportFile.cutConfigs = cuts.ToArray();
@@ -421,9 +470,83 @@ public class uiEvents : MonoBehaviour
             var task = RunInBackground(() =>
             {
                 CreateFinalFigure(tempFile, path, addLogFromBg);
-            }, $"Creating figure for {lastFileName}");
+            }, $"Creating figure for {lastFileName}", indeterminate: true);
             await task;
         }
+    }
+
+    private async UniTask<bool> EnsureFigureDownloadsReady(IEnumerable<BareMinimumStlFile> exportFiles)
+    {
+        var requests = new List<DownloadRequest>();
+        var unresolved = new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var file in exportFiles ?? Enumerable.Empty<BareMinimumStlFile>())
+        {
+            CollectDownloadRequest(file?.FullPath, requests, unresolved, seen);
+            CollectDownloadRequest(file?.ClearToApplyFullPath, requests, unresolved, seen);
+        }
+
+        if (unresolved.Count > 0)
+        {
+            PromptDialog.ShowAlert(GetRootOwner(), "Missing figure files", string.Join("\n", unresolved.Take(8)));
+            return false;
+        }
+
+        if (requests.Count == 0)
+            return true;
+
+        var result = await DownloadManager.DownloadAsync(requests, "Downloading figure assets");
+        if (!result.Success)
+        {
+            ShowDownloadFailure("Figure download failed", result);
+            return false;
+        }
+
+        return true;
+    }
+
+    private VisualElement GetRootOwner()
+    {
+        var document = GetComponent<UIDocument>();
+        return document != null ? document.rootVisualElement : null;
+    }
+
+    private void CollectDownloadRequest(string fullPath, List<DownloadRequest> requests, List<string> unresolved, HashSet<string> seen)
+    {
+        if (string.IsNullOrWhiteSpace(fullPath) || File.Exists(fullPath))
+            return;
+
+        if (!DataManager.Instance.TryCreateDownloadRequest(fullPath, out var request))
+        {
+            unresolved.Add(fullPath);
+            return;
+        }
+
+        if (request == null || string.IsNullOrWhiteSpace(request.LocalPath))
+            return;
+
+        if (!seen.Add(request.LocalPath))
+            return;
+
+        requests.Add(request);
+    }
+
+    private void ShowDownloadFailure(string title, DownloadBatchResult result)
+    {
+        var failureLines = result.Failures
+            .Take(5)
+            .Select(f => $"{Path.GetFileName(f.LocalPath)}: {f.Error}")
+            .ToList();
+
+        var message = failureLines.Count == 0
+            ? "One or more downloads failed."
+            : string.Join("\n", failureLines);
+
+        if (result.Failures.Count > failureLines.Count)
+            message += $"\n...and {result.Failures.Count - failureLines.Count} more.";
+
+        PromptDialog.ShowAlert(GetRootOwner(), title, message);
     }
 
     int progressStack = 0;
@@ -431,13 +554,16 @@ public class uiEvents : MonoBehaviour
     private GameObject _baseObject;
     private Vector3 _baseSize;
     
-    private void StartProgress(string label = "Working")
+    private void StartProgress(string label = "Working", bool indeterminate = false)
     {
         _progress.visible = true;
         _progress.title = label;
         _progress.style.display = DisplayStyle.Flex;
         outputBuilder.Clear();
         progressStack++;
+        SetIndeterminateProgress(indeterminate);
+        if (!indeterminate && _progress.highValue <= 0)
+            _progress.highValue = 100;
         _tabView.SetEnabled(false);
         _generateFigureDialog?.SetEnabled(false);
         _loadButton.SetEnabled(false);
@@ -446,14 +572,23 @@ public class uiEvents : MonoBehaviour
         //_tree.SetEnabled(false);
         UniTask.RunOnThreadPool(async () =>
         {
-            while(progressStack > 0)
+            while (progressStack > 0)
             {
                 await UniTask.SwitchToThreadPool();
-                await UniTask.WaitForSeconds(.2f);
+                await UniTask.WaitForSeconds(_progressIndeterminate ? .05f : .2f);
                 await UniTask.SwitchToMainThread();
-                _progress.value = (_progress.value + 5) % _progress.highValue;
+                if (_progressIndeterminate)
+                {
+                    _progressIndeterminatePhase = (_progressIndeterminatePhase + 0.04f) % 1f;
+                    UpdateIndeterminateProgress();
+                }
+                else
+                {
+                    _progress.value = (_progress.value + 5) % Math.Max(_progress.highValue, 1);
+                }
             }
             await UniTask.SwitchToMainThread();
+            SetIndeterminateProgress(false);
             _progress.visible = false;
             _progress.style.display = DisplayStyle.None;
             _generateFigureDialog?.SetEnabled(true);
@@ -468,6 +603,74 @@ public class uiEvents : MonoBehaviour
     private void StopProgress()
     {
         progressStack--;
+    }
+
+    private void InitializeProgressOverlay()
+    {
+        if (_progress == null || _progressIndeterminateOverlay != null)
+            return;
+
+        var progressBackground = _progress.Q<VisualElement>(className: ProgressBar.backgroundUssClassName) ?? _progress;
+
+        _progressIndeterminateOverlay = new VisualElement
+        {
+            name = "ProgressIndeterminateOverlay",
+            pickingMode = PickingMode.Ignore
+        };
+        _progressIndeterminateOverlay.style.position = Position.Absolute;
+        _progressIndeterminateOverlay.style.left = 0;
+        _progressIndeterminateOverlay.style.right = 0;
+        _progressIndeterminateOverlay.style.top = 0;
+        _progressIndeterminateOverlay.style.bottom = 0;
+        _progressIndeterminateOverlay.style.overflow = Overflow.Hidden;
+        _progressIndeterminateOverlay.style.display = DisplayStyle.None;
+
+        _progressIndeterminateBar = new VisualElement
+        {
+            name = "ProgressIndeterminateBar",
+            pickingMode = PickingMode.Ignore
+        };
+        _progressIndeterminateBar.style.position = Position.Absolute;
+        _progressIndeterminateBar.style.top = 0;
+        _progressIndeterminateBar.style.bottom = 0;
+        _progressIndeterminateBar.style.left = Length.Percent(-30);
+        _progressIndeterminateBar.style.width = Length.Percent(30);
+        _progressIndeterminateBar.style.backgroundColor = new Color(0.11f, 0.65f, 0.64f, 0.9f);
+        _progressIndeterminateBar.style.borderTopLeftRadius = 8;
+        _progressIndeterminateBar.style.borderBottomLeftRadius = 8;
+        _progressIndeterminateBar.style.borderTopRightRadius = 8;
+        _progressIndeterminateBar.style.borderBottomRightRadius = 8;
+
+        _progressIndeterminateOverlay.Add(_progressIndeterminateBar);
+        progressBackground.Add(_progressIndeterminateOverlay);
+    }
+
+    private void SetIndeterminateProgress(bool indeterminate)
+    {
+        _progressIndeterminate = indeterminate;
+        if (_progressIndeterminateOverlay == null || _progressIndeterminateBar == null)
+            return;
+
+        _progressIndeterminateOverlay.style.display = indeterminate ? DisplayStyle.Flex : DisplayStyle.None;
+        if (indeterminate)
+        {
+            _progressIndeterminatePhase = 0f;
+            _progress.value = 0;
+            _progress.highValue = 1;
+            UpdateIndeterminateProgress();
+        }
+    }
+
+    private void UpdateIndeterminateProgress()
+    {
+        if (_progressIndeterminateBar == null)
+            return;
+
+        const float segmentWidth = 0.30f;
+        var travel = 1f + segmentWidth;
+        var left = (_progressIndeterminatePhase * travel) - segmentWidth;
+        _progressIndeterminateBar.style.left = Length.Percent(left * 100f);
+        _progressIndeterminateBar.style.width = Length.Percent(segmentWidth * 100f);
     }
 
     private async UniTask RunInBackground(Func<UniTask> action, string label = "Working")
@@ -488,6 +691,24 @@ public class uiEvents : MonoBehaviour
         StopProgress();
     }
 
+    private async UniTask RunInBackground(Func<UniTask> action, string label, bool indeterminate)
+    {
+        StartProgress(label, indeterminate);
+        await UniTask.SwitchToThreadPool();
+        await action();
+        await UniTask.SwitchToMainThread();
+        StopProgress();
+    }
+
+    private async UniTask RunInBackground(Action action, string label, bool indeterminate)
+    {
+        StartProgress(label, indeterminate);
+        await UniTask.SwitchToThreadPool();
+        action();
+        await UniTask.SwitchToMainThread();
+        StopProgress();
+    }
+
 
 
     private async void HandleLoadButtonClick(ClickEvent evt)
@@ -498,18 +719,27 @@ public class uiEvents : MonoBehaviour
         string path = results[0];
         if (path.Length != 0)
         {
+            var fileContent = File.ReadAllText(path);
+            var output = JsonUtility.FromJson<ExportFile>(fileContent);
+            if (output == null)
+            {
+                PromptDialog.ShowAlert(GetRootOwner(), "Load figure failed", "The selected figure file could not be read.");
+                return;
+            }
+            if (!await EnsureFigureRepositoriesLoadedAsync(output))
+                return;
+
             lastFileName = Path.GetFileNameWithoutExtension(path);
             DataManager.Instance.RemoveAllObjects();
             ClearLoadedFiles();
             FileInfo fileInfo = new FileInfo(path);
             previousFolder = fileInfo.DirectoryName;
-            var fileContent = File.ReadAllText(path);
-            var output = JsonUtility.FromJson<ExportFile>(fileContent);
             addLogFromMainThread("Starting load...");
             await RunInBackground(async () =>
             {
                 await recursiveImport(DataManager.Instance.StlTree, output);
-                var allImports = output.children.Where(c => c.IsImport).ToList();
+                var loadedChildren = output.children ?? Array.Empty<BareMinimumStlFile>();
+                var allImports = loadedChildren.Where(c => c.IsImport).ToList();
                 foreach (var item in allImports)
                 {
                     DataManager.Instance.ApplyObject(new StlFile()
@@ -519,6 +749,8 @@ public class uiEvents : MonoBehaviour
                         IsImport = item.IsImport,
                         SelectionCanChange = true,
                         ClearToApply = item.ClearToApplyFullPath,
+                        RepositorySource = item.RepositorySource,
+                        ClearRepositorySource = item.ClearRepositorySource,
                         originalSize = item.OriginalSize,
                         Transforms = item.transforms
                     }, false);
@@ -533,34 +765,110 @@ public class uiEvents : MonoBehaviour
         }
     }
 
+    private async UniTask<bool> EnsureFigureRepositoriesLoadedAsync(ExportFile figure)
+    {
+        if (figure?.children == null)
+            return true;
+
+        var sources = figure.children
+            .Select(child => child?.RepositorySource)
+            .Concat(figure.children.Select(child => child?.ClearRepositorySource))
+            .Where(source => !string.IsNullOrWhiteSpace(source))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (sources.Count == 0)
+            return true;
+
+        if (_repoTab == null)
+            return sources.All(source => DataManager.Instance.HasRepositorySource(source));
+
+        foreach (var source in sources)
+        {
+            if (DataManager.Instance.HasRepositorySource(source))
+                continue;
+
+            if (!await _repoTab.EnsureRepositoryLoadedAsync(source))
+                return false;
+        }
+
+        return true;
+    }
+
     private async UniTask recursiveImport(IEnumerable<TreeViewItemData<ITreeItem>> hierarchy, ExportFile importedData)
     {
+        if (hierarchy == null || importedData?.children == null)
+            return;
+
+        foreach (var imported in importedData.children)
+        {
+            var stl = FindMatchingTreeItem(hierarchy, imported);
+            if (stl == null)
+                continue;
+
+            var fileName = Path.GetFileName(stl.FullPath);
+            addLogFromBg($"loading {fileName}");
+            stl.Selected = true;
+            var clearFileName = Path.GetFileName(imported.ClearToApplyFullPath);
+            if (!string.IsNullOrWhiteSpace(clearFileName))
+                addLogFromBg($"applying modifier {clearFileName}");
+            await UniTask.SwitchToMainThread();
+            //stl.ClearToApply = DataManager.Instance.AllClears.FirstOrDefault(clear => Path.GetFileName(clear.FullPath) == clearFileName)?.FullPath;
+            DataManager.Instance.ApplyClear(stl, clearFileName, false);
+            await UniTask.SwitchToThreadPool();
+        }
+    }
+
+    private static StlFile FindMatchingTreeItem(IEnumerable<TreeViewItemData<ITreeItem>> hierarchy, BareMinimumStlFile imported)
+    {
+        StlFile fallback = null;
+        var exactMatch = FindMatchingTreeItem(hierarchy, imported, ref fallback);
+        return exactMatch ?? fallback;
+    }
+
+    private static StlFile FindMatchingTreeItem(IEnumerable<TreeViewItemData<ITreeItem>> hierarchy, BareMinimumStlFile imported, ref StlFile fallback)
+    {
+        if (hierarchy == null || imported == null || string.IsNullOrWhiteSpace(imported.FullPath))
+            return null;
+
+        var targetPath = imported.FullPath;
+        var targetFileName = Path.GetFileName(targetPath);
+
         foreach (var hierarchyItem in hierarchy)
         {
-            if (hierarchyItem.children.Count() > 0)
-                await recursiveImport(hierarchyItem.children, importedData);
-            else
+            if (hierarchyItem.children != null && hierarchyItem.children.Count() > 0)
             {
-                var stl = hierarchyItem.data as StlFile;
-                if (stl != null)
-                {
-                    var fileName = Path.GetFileName(stl.FullPath);
-                    var imported = importedData.children.FirstOrDefault(c => Path.GetFileName(c.FullPath) == fileName);
-                    if (imported != null)
-                    {
-                        addLogFromBg($"loading {fileName}");
-                        stl.Selected = true;
-                        var clearFileName = Path.GetFileName(imported.ClearToApplyFullPath);
-                        if (clearFileName != null && clearFileName != string.Empty)
-                            addLogFromBg($"applying modifier {clearFileName}");
-                        await UniTask.SwitchToMainThread();
-                        //stl.ClearToApply = DataManager.Instance.AllClears.FirstOrDefault(clear => Path.GetFileName(clear.FullPath) == clearFileName)?.FullPath;
-                        DataManager.Instance.ApplyClear(stl, clearFileName, false);
-                        await UniTask.SwitchToThreadPool();
-                    }
-                }
+                var childMatch = FindMatchingTreeItem(hierarchyItem.children, imported, ref fallback);
+                if (childMatch != null)
+                    return childMatch;
+            }
+
+            var stl = hierarchyItem.data as StlFile;
+            if (stl == null)
+                continue;
+
+            if (PathsEqual(stl.FullPath, targetPath) || PathsEqual(stl.UiPath, targetPath))
+                return stl;
+
+            if (fallback == null && !string.IsNullOrWhiteSpace(targetFileName))
+            {
+                var fileName = Path.GetFileName(stl.FullPath);
+                if (!string.IsNullOrWhiteSpace(fileName) && string.Equals(fileName, targetFileName, StringComparison.OrdinalIgnoreCase))
+                    fallback = stl;
+                else if (!string.IsNullOrWhiteSpace(stl.UiName) && string.Equals(stl.UiName, targetFileName, StringComparison.OrdinalIgnoreCase))
+                    fallback = stl;
             }
         }
+
+        return fallback;
+    }
+
+    private static bool PathsEqual(string left, string right)
+    {
+        if (string.IsNullOrWhiteSpace(left) || string.IsNullOrWhiteSpace(right))
+            return false;
+
+        return string.Equals(Path.GetFullPath(left), Path.GetFullPath(right), StringComparison.OrdinalIgnoreCase);
     }
 
     private void HandleSaveButtonClick(ClickEvent evt)
@@ -606,6 +914,7 @@ public class uiEvents : MonoBehaviour
     private async UniTask LoadNewObjectForClear(StlFile treeItem)
     {
         await UniTask.SwitchToMainThread();
+        stlImport.Unload(treeItem.SceneKey);
         stlImport.Unload(treeItem.FullPath);
         stlImport.Unload(treeItem.AfterClearsAppliedFullPath);
         if (treeItem.ClearToApply != null && File.Exists(treeItem.ClearToApply))
