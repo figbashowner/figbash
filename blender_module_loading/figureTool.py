@@ -168,7 +168,7 @@ def handle_one_json_child(stlfile, combining = False, keep = False):
     #print(stlfile["FullPath"])
     #print(stlfile["ClearToApplyFullPath"])
     #print(output)
-    bpy.ops.import_mesh.stl(filepath = stlfile["FullPath"])
+    bpy.ops.wm.stl_import(filepath = stlfile["FullPath"])
     obj_base = bpy.context.selected_objects[0]
     origSize = obj_base.dimensions
     newPosition = None
@@ -198,7 +198,7 @@ def handle_one_json_child(stlfile, combining = False, keep = False):
     if "IsImport" in stlfile and stlfile["IsImport"] == True and combining == True:
         remesh_object(obj_base, keep)
     if "ClearToApplyFullPath" in stlfile and stlfile["ClearToApplyFullPath"] is not None and stlfile["ClearToApplyFullPath"] != "":
-        bpy.ops.import_mesh.stl(filepath = stlfile["ClearToApplyFullPath"])
+        bpy.ops.wm.stl_import(filepath = stlfile["ClearToApplyFullPath"])
         obj_b = bpy.context.selected_objects[0]
         apply_cut(obj_base, obj_b, True, False)
 
@@ -214,9 +214,9 @@ command = sys.argv[1]
     bpy.ops.object.select_all(action = 'SELECT')
     bpy.ops.object.delete()
 
-    bpy.ops.import_mesh.stl(filepath = file_a)
+    bpy.ops.wm.stl_import(filepath = file_a)
     obj_base = bpy.context.selected_objects[0]
-    bpy.ops.import_mesh.stl(filepath = file_b)
+    bpy.ops.wm.stl_import(filepath = file_b)
     obj_b = bpy.context.selected_objects[0]
 
     apply_cut(obj_base, obj_b, True, False)
@@ -232,7 +232,7 @@ elif command == "combineAll":
     bpy.ops.object.delete()
 
     primary_obj = None
-    bpy.ops.import_mesh.stl(filepath = file_a)
+    bpy.ops.wm.stl_import(filepath = file_a)
     obj_base = bpy.context.selected_objects[0]
     special_cut = None
     last_file = ""
@@ -254,7 +254,7 @@ elif command == "combineAll":
                 file_b = currentfile[1:]
         myPrint("importing " + file_b + " isCut: " + str(isCut) + " keep: " + str(keep))
         last_file = os.path.basename(file_b)
-        bpy.ops.import_mesh.stl(filepath = file_b)
+        bpy.ops.wm.stl_import(filepath = file_b)
         obj_b = bpy.context.selected_objects[0]
         if isCuttingNext:
             special_cut = obj_b
@@ -339,7 +339,7 @@ elif command == "combineAllJson":
         bpy.ops.object.duplicate()
         obj_target = bpy.context.selected_objects[0]
         if "CutsFileFullPath" in cuts and cuts["CutsFileFullPath"] is not None:
-            bpy.ops.import_mesh.stl(filepath = cuts["CutsFileFullPath"])
+            bpy.ops.wm.stl_import(filepath = cuts["CutsFileFullPath"])
             obj_cuts = bpy.context.selected_objects[0]
             apply_cut(obj_target, obj_cuts, isCut=True, keep=keep)
 
