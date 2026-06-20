@@ -501,7 +501,7 @@ namespace Assets
 
                 var entry = GetRepositoryEntry(index);
                 button.userData = entry;
-                button.SetEnabled(entry != null && !_isLoadingRepositories);
+                button.SetEnabled(entry != null);
                 button.UnregisterCallback<ClickEvent>(HandleRemoveRepoClick);
                 button.RegisterCallback<ClickEvent>(HandleRemoveRepoClick);
             };
