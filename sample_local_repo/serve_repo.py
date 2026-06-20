@@ -16,6 +16,7 @@ import argparse
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+import time
 
 
 def parse_args() -> argparse.Namespace:
@@ -33,20 +34,46 @@ def parse_args() -> argparse.Namespace:
         default=8000,
         help="Port to bind to. Use 0 to pick a free port automatically.",
     )
+    parser.add_argument(
+        "--delay-seconds",
+        type=float,
+        default=0.0,
+        help=(
+            "Delay STL responses by this many seconds to make download progress "
+            "easier to see. Defaults to 0."
+        ),
+    )
     return parser.parse_args()
+
+
+class SampleRepoHandler(SimpleHTTPRequestHandler):
+    delay_seconds = 0.0
+
+    def send_head(self):
+        if self.delay_seconds > 0 and self._should_delay(self.path):
+            time.sleep(self.delay_seconds)
+        return super().send_head()
+
+    @staticmethod
+    def _should_delay(path: str) -> bool:
+        clean_path = path.split("?", 1)[0].split("#", 1)[0].lower()
+        return clean_path.endswith(".stl") or clean_path.endswith(".ui.stl")
 
 
 def main() -> None:
     args = parse_args()
     root = Path(__file__).resolve().parent
 
-    handler = partial(SimpleHTTPRequestHandler, directory=str(root))
+    SampleRepoHandler.delay_seconds = args.delay_seconds
+    handler = partial(SampleRepoHandler, directory=str(root))
     server = ThreadingHTTPServer((args.host, args.port), handler)
     actual_host, actual_port = server.server_address[:2]
     catalog_url = f"http://{actual_host}:{actual_port}/catalog.json"
 
     print(f"Serving {root}")
     print(f"Catalog URL: {catalog_url}")
+    if args.delay_seconds > 0:
+        print(f"Delaying STL responses by {args.delay_seconds:.2f} seconds.")
     print("Press Ctrl+C to stop.")
 
     try:
