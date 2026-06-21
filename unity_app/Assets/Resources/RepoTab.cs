@@ -23,8 +23,17 @@ namespace Assets
             public string Source;
         }
 
+        [Serializable]
+        private sealed class BuiltInRepositoryEntry
+        {
+            public string Name;
+            public string Source;
+        }
+
         private readonly List<RepositoryEntry> _repositoryEntries = new List<RepositoryEntry>();
+        private readonly List<BuiltInRepositoryEntry> _builtInRepositoryEntries = new List<BuiltInRepositoryEntry>();
         private MultiColumnListView _repoList;
+        private MultiColumnListView _builtInRepoList;
         private Button _addRepoButton;
         private Button _refreshReposButton;
         private bool _isLoadingRepositories;
@@ -32,6 +41,7 @@ namespace Assets
         public RepoTab()
         {
             RegisterCallback<AttachToPanelEvent>(OnAttachToPanel);
+            RegisterCallback<DetachFromPanelEvent>(OnDetachFromPanel);
         }
 
         private void OnAttachToPanel(AttachToPanelEvent evt)
@@ -51,8 +61,13 @@ namespace Assets
             _addRepoButton = this.Q<Button>("AddRepoButton");
             _refreshReposButton = this.Q<Button>("RefreshReposButton");
             _repoList = this.Q<MultiColumnListView>("RepositoryList");
+            _builtInRepoList = this.Q<MultiColumnListView>("BuiltInRepositoryList");
 
+            InitializeBuiltInRepositoryEntries();
             ConfigureRepositoryList();
+            ConfigureBuiltInRepositoryList();
+            DataManager.Instance.OnDataChanged -= OnDataChanged;
+            DataManager.Instance.OnDataChanged += OnDataChanged;
             RefreshRepoListView();
 
             if (_addRepoButton != null)
@@ -70,6 +85,7 @@ namespace Assets
 
         private void OnDetachFromPanel(DetachFromPanelEvent evt)
         {
+            DataManager.Instance.OnDataChanged -= OnDataChanged;
         }
 
         private VisualElement GetRootOwner()
@@ -198,6 +214,20 @@ namespace Assets
             _ = LoadSavedRepositoriesAsync();
         }
 
+        private void HandleAddBuiltInRepoClick(ClickEvent evt)
+        {
+            if (_isLoadingRepositories)
+                return;
+
+            if (evt.currentTarget is not Button button)
+                return;
+
+            if (button.userData is not BuiltInRepositoryEntry entry)
+                return;
+
+            _ = AddBuiltInRepositoryAsync(GetRootOwner(), entry);
+        }
+
         public async UniTask<bool> EnsureRepositoryLoadedAsync(string source)
         {
             var normalizedSource = NormalizeRepoSource(source);
@@ -216,6 +246,18 @@ namespace Assets
 
             RefreshRepoListView();
             return true;
+        }
+
+        private async UniTask AddBuiltInRepositoryAsync(VisualElement owner, BuiltInRepositoryEntry entry)
+        {
+            if (entry == null || string.IsNullOrWhiteSpace(entry.Source))
+                return;
+
+            if (!await EnsureRepositoryLoadedAsync(entry.Source))
+                return;
+
+            RefreshRepoListView();
+            SelectAllTab(owner);
         }
 
         private void HandleRemoveRepoClick(ClickEvent evt)
@@ -509,11 +551,58 @@ namespace Assets
 
         private void RefreshRepoListView()
         {
-            if (_repoList == null)
+            if (_repoList != null)
+            {
+                _repoList.itemsSource = _repositoryEntries;
+                _repoList.RefreshItems();
+            }
+
+            RefreshBuiltInRepoListView();
+        }
+
+        private void ConfigureBuiltInRepositoryList()
+        {
+            if (_builtInRepoList == null)
                 return;
 
-            _repoList.itemsSource = _repositoryEntries;
-            _repoList.RefreshItems();
+            _builtInRepoList.columns["name"].makeCell = () => new Label();
+            _builtInRepoList.columns["add"].makeCell = () => new Button() { text = "+" };
+
+            _builtInRepoList.columns["name"].bindCell = (element, index) =>
+            {
+                if (element is Label label)
+                {
+                    var entry = GetBuiltInRepositoryEntry(index);
+                    label.text = entry?.Name ?? string.Empty;
+                    label.tooltip = entry?.Source ?? string.Empty;
+                }
+            };
+
+            _builtInRepoList.columns["add"].bindCell = (element, index) =>
+            {
+                if (element is not Button button)
+                    return;
+
+                var entry = GetBuiltInRepositoryEntry(index);
+                button.userData = entry;
+                button.text = "+";
+                button.tooltip = entry?.Source ?? string.Empty;
+                button.SetEnabled(entry != null
+                    && !string.IsNullOrWhiteSpace(entry.Source)
+                    && !DataManager.Instance.HasRepositorySource(entry.Source)
+                    && !_isLoadingRepositories);
+                button.UnregisterCallback<ClickEvent>(HandleAddBuiltInRepoClick);
+                button.RegisterCallback<ClickEvent>(HandleAddBuiltInRepoClick);
+            };
+        }
+
+        private void RefreshBuiltInRepoListView()
+        {
+            if (_builtInRepoList == null)
+                return;
+
+            _builtInRepoList.itemsSource = _builtInRepositoryEntries;
+            _builtInRepoList.RefreshItems();
         }
 
         private RepositoryEntry GetRepositoryEntry(int index)
@@ -524,11 +613,46 @@ namespace Assets
             return _repositoryEntries[index];
         }
 
+        private BuiltInRepositoryEntry GetBuiltInRepositoryEntry(int index)
+        {
+            if (index < 0 || index >= _builtInRepositoryEntries.Count)
+                return null;
+
+            return _builtInRepositoryEntries[index];
+        }
+
         private void SetRepositoryUiEnabled(bool enabled)
         {
             _addRepoButton?.SetEnabled(enabled);
             _refreshReposButton?.SetEnabled(enabled);
             _repoList?.SetEnabled(enabled);
+            _builtInRepoList?.SetEnabled(enabled);
+        }
+
+        private void InitializeBuiltInRepositoryEntries()
+        {
+            _builtInRepositoryEntries.Clear();
+
+            var sampleLocalRepoPath = GetSampleLocalRepoPath();
+            if (!string.IsNullOrWhiteSpace(sampleLocalRepoPath) && Directory.Exists(sampleLocalRepoPath))
+            {
+                _builtInRepositoryEntries.Add(new BuiltInRepositoryEntry
+                {
+                    Name = "Sample Local Repo",
+                    Source = NormalizeRepoSource(sampleLocalRepoPath),
+                });
+            }
+
+            _builtInRepositoryEntries.Add(new BuiltInRepositoryEntry
+            {
+                Name = "Sample HTTP Repo",
+                Source = NormalizeRepoSource("http://127.0.0.1:8000/"),
+            });
+        }
+
+        private static string GetSampleLocalRepoPath()
+        {
+            return Path.GetFullPath(Path.Combine(Application.dataPath, "..", "..", "sample_local_repo"));
         }
 
         private void LoadManifestEntries()
@@ -809,7 +933,7 @@ namespace Assets
 
         private void OnDataChanged()
         {
-            // Intentionally left blank.
+            RefreshRepoListView();
         }
     }
 }

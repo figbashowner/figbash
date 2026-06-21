@@ -103,10 +103,24 @@
     margin-left: 0px;
 }
 
+.repo-shell__section-title {
+    color: rgb(248, 250, 252);
+    font-size: 13px;
+    -unity-font-style: bold;
+    margin-top: 10px;
+    margin-bottom: 6px;
+}
+
 .repo-shell__list {
     flex-grow: 1;
     flex-shrink: 1;
     min-height: 0;
+}
+
+.repo-shell__list--built-in {
+    flex-grow: 0;
+    flex-shrink: 0;
+    height: 168px;
 }
 
 .repo-dialog__title {
@@ -371,7 +385,9 @@ Button:disabled,
 #TreeControl Button,
 #TreeControl .unity-button,
 #RepositoryList Button,
-#RepositoryList .unity-button {
+#RepositoryList .unity-button,
+#BuiltInRepositoryList Button,
+#BuiltInRepositoryList .unity-button {
     background-image: none;
     -unity-background-image-tint-color: rgba(0, 0, 0, 0);
 }
@@ -381,7 +397,9 @@ Button:disabled,
 #TreeControl Button:hover,
 #TreeControl .unity-button:hover,
 #RepositoryList Button:hover,
-#RepositoryList .unity-button:hover {
+#RepositoryList .unity-button:hover,
+#BuiltInRepositoryList Button:hover,
+#BuiltInRepositoryList .unity-button:hover {
     background-color: rgb(40, 51, 67);
     background-image: none;
     border-left-color: rgb(82, 103, 129);
@@ -395,7 +413,9 @@ Button:disabled,
 #TreeControl Button:active,
 #TreeControl .unity-button:active,
 #RepositoryList Button:active,
-#RepositoryList .unity-button:active {
+#RepositoryList .unity-button:active,
+#BuiltInRepositoryList Button:active,
+#BuiltInRepositoryList .unity-button:active {
     background-color: rgb(24, 31, 41);
     background-image: none;
 }
@@ -405,7 +425,9 @@ Button:disabled,
 #TreeControl Button:disabled,
 #TreeControl .unity-button:disabled,
 #RepositoryList Button:disabled,
-#RepositoryList .unity-button:disabled {
+#RepositoryList .unity-button:disabled,
+#BuiltInRepositoryList Button:disabled,
+#BuiltInRepositoryList .unity-button:disabled {
     background-color: rgb(24, 31, 41);
     background-image: none;
     opacity: 0.55;
@@ -786,7 +808,8 @@ RadioButtonGroup {
 */
 #SelectedItemsList,
 #TreeControl,
-#RepositoryList {
+#RepositoryList,
+#BuiltInRepositoryList {
     background-color: rgb(18, 23, 31);
     flex-grow: 1;
     flex-shrink: 1;
@@ -816,7 +839,8 @@ RadioButtonGroup {
 
 #SelectedItemsList Label,
 #TreeControl Label,
-#RepositoryList Label {
+#RepositoryList Label,
+#BuiltInRepositoryList Label {
     color: rgb(230, 236, 243);
 }
 
@@ -828,7 +852,10 @@ RadioButtonGroup {
 #TreeControl .unity-tree-view__item,
 #RepositoryList .unity-list-view__item,
 #RepositoryList .unity-collection-view__item,
-#RepositoryList .unity-tree-view__item {
+#RepositoryList .unity-tree-view__item,
+#BuiltInRepositoryList .unity-list-view__item,
+#BuiltInRepositoryList .unity-collection-view__item,
+#BuiltInRepositoryList .unity-tree-view__item {
     background-color: rgba(0, 0, 0, 0);
 }
 
@@ -840,7 +867,10 @@ RadioButtonGroup {
 #TreeControl .unity-tree-view__item:hover,
 #RepositoryList .unity-list-view__item:hover,
 #RepositoryList .unity-collection-view__item:hover,
-#RepositoryList .unity-tree-view__item:hover {
+#RepositoryList .unity-tree-view__item:hover,
+#BuiltInRepositoryList .unity-list-view__item:hover,
+#BuiltInRepositoryList .unity-collection-view__item:hover,
+#BuiltInRepositoryList .unity-tree-view__item:hover {
     background-color: rgba(51, 118, 153, 0.20);
 }
 
@@ -855,8 +885,18 @@ RadioButtonGroup {
 #RepositoryList .unity-list-view__item:selected,
 #RepositoryList .unity-collection-view__item:selected,
 #RepositoryList .unity-collection-view__item--selected,
-#RepositoryList .unity-tree-view__item:selected {
+#RepositoryList .unity-tree-view__item:selected,
+#BuiltInRepositoryList .unity-list-view__item:selected,
+#BuiltInRepositoryList .unity-collection-view__item:selected,
+#BuiltInRepositoryList .unity-collection-view__item--selected,
+#BuiltInRepositoryList .unity-tree-view__item:selected {
     background-color: rgba(51, 118, 153, 0.36);
+}
+
+#BuiltInRepositoryList {
+    flex-grow: 0;
+    flex-shrink: 0;
+    height: 168px;
 }
 
 .unity-scroll-view__content-and-vertical-scroll-container,
