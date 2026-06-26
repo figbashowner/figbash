@@ -354,7 +354,7 @@ namespace Assets
                 ResolveCatalogPaths(catalog, cacheRoot);
                 Utils.PairUiSidecars(catalog);
 
-                var downloadRequests = BuildUiSidecarDownloadRequests(new Uri(baseSource), catalog, cacheRoot);
+                var downloadRequests = BuildRepositoryPreviewDownloadRequests(new Uri(baseSource), catalog, cacheRoot);
                 var downloadResult = await DownloadManager.DownloadAsync(downloadRequests, "Downloading repository previews");
                 if (!downloadResult.Success)
                 {
@@ -415,14 +415,14 @@ namespace Assets
             return cacheRoot;
         }
 
-        private static List<DownloadRequest> BuildUiSidecarDownloadRequests(Uri baseUri, Folder folder, string cacheRoot)
+        private static List<DownloadRequest> BuildRepositoryPreviewDownloadRequests(Uri baseUri, Folder folder, string cacheRoot)
         {
             var requests = new List<DownloadRequest>();
-            CollectUiSidecarDownloadRequests(baseUri, folder, cacheRoot, requests);
+            CollectRepositoryPreviewDownloadRequests(baseUri, folder, cacheRoot, requests);
             return requests;
         }
 
-        private static void CollectUiSidecarDownloadRequests(Uri baseUri, Folder folder, string cacheRoot, List<DownloadRequest> requests)
+        private static void CollectRepositoryPreviewDownloadRequests(Uri baseUri, Folder folder, string cacheRoot, List<DownloadRequest> requests)
         {
             if (folder == null)
                 return;
@@ -431,7 +431,7 @@ namespace Assets
             {
                 foreach (var subdir in folder.Subdirs)
                 {
-                    CollectUiSidecarDownloadRequests(baseUri, subdir, cacheRoot, requests);
+                    CollectRepositoryPreviewDownloadRequests(baseUri, subdir, cacheRoot, requests);
                 }
             }
 
@@ -446,15 +446,22 @@ namespace Assets
                 if (file.Name.EndsWith(".ui.stl", StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                if (string.IsNullOrWhiteSpace(file.UiName))
+                if (!string.IsNullOrWhiteSpace(file.UiName))
+                {
+                    var uiLocalPath = Utils.GetUiSidecarPath(file.FullPath);
+                    if (string.IsNullOrWhiteSpace(uiLocalPath))
+                        continue;
+
+                    var uiRelativePath = Path.GetRelativePath(cacheRoot, uiLocalPath).Replace('\\', '/');
+                    requests.Add(new DownloadRequest(baseUri, uiRelativePath, uiLocalPath, file.UiHash));
+                    continue;
+                }
+
+                if (string.IsNullOrWhiteSpace(file.FullPath))
                     continue;
 
-                var localPath = Utils.GetUiSidecarPath(file.FullPath);
-                if (string.IsNullOrWhiteSpace(localPath))
-                    continue;
-
-                var relativePath = Path.GetRelativePath(cacheRoot, localPath).Replace('\\', '/');
-                requests.Add(new DownloadRequest(baseUri, relativePath, localPath, file.UiHash));
+                var regularRelativePath = Path.GetRelativePath(cacheRoot, file.FullPath).Replace('\\', '/');
+                requests.Add(new DownloadRequest(baseUri, regularRelativePath, file.FullPath, file.Hash));
             }
         }
 

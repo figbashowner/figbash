@@ -1,9 +1,7 @@
-"""Serve this sample repository over HTTP for Unity repo-loading tests.
+"""Serve a repository folder over HTTP for Unity repo-loading tests.
 
 Usage:
-    python serve_repo.py
-    python serve_repo.py --port 8000
-    python serve_repo.py --port 0
+    python serve_repo.py ROOT_DIR [--host 127.0.0.1] [--port 8000] [--delay-seconds 0]
 
 The Unity app should be pointed at the catalog URL printed by the script,
 for example:
@@ -21,7 +19,11 @@ import time
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Serve the sample_local_repo folder over HTTP."
+        description="Serve a repository folder over HTTP."
+    )
+    parser.add_argument(
+        "root_dir",
+        help="Folder to serve. Pass . to serve the current folder.",
     )
     parser.add_argument(
         "--host",
@@ -46,7 +48,7 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-class SampleRepoHandler(SimpleHTTPRequestHandler):
+class RepoHandler(SimpleHTTPRequestHandler):
     delay_seconds = 0.0
 
     def send_head(self):
@@ -62,13 +64,18 @@ class SampleRepoHandler(SimpleHTTPRequestHandler):
 
 def main() -> None:
     args = parse_args()
-    root = Path(__file__).resolve().parent
+    root = Path(args.root_dir).expanduser().resolve()
+    if not root.exists() or not root.is_dir():
+        raise SystemExit(f"Root directory does not exist or is not a directory: {root}")
 
-    SampleRepoHandler.delay_seconds = args.delay_seconds
-    handler = partial(SampleRepoHandler, directory=str(root))
+    RepoHandler.delay_seconds = args.delay_seconds
+    handler = partial(RepoHandler, directory=str(root))
     server = ThreadingHTTPServer((args.host, args.port), handler)
     actual_host, actual_port = server.server_address[:2]
-    catalog_url = f"http://{actual_host}:{actual_port}/catalog.json"
+    display_host = args.host
+    if display_host in {"0.0.0.0", "::"}:
+        display_host = "127.0.0.1"
+    catalog_url = f"http://{display_host}:{actual_port}/catalog.json"
 
     print(f"Serving {root}")
     print(f"Catalog URL: {catalog_url}")

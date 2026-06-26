@@ -35,6 +35,183 @@ namespace Assets
             return System.IO.Path.ChangeExtension(stlPath, ".ui.stl");
         }
 
+        public static string MakePortablePath(string path, string rootPath)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return path;
+
+            var normalizedPath = NormalizePath(path);
+            if (string.IsNullOrWhiteSpace(normalizedPath))
+                return path.Trim();
+
+            var normalizedRoot = NormalizePath(rootPath);
+            if (!string.IsNullOrWhiteSpace(normalizedRoot))
+            {
+                var relativePath = TryMakeRelativePath(normalizedRoot, normalizedPath);
+                if (!string.IsNullOrWhiteSpace(relativePath))
+                    return relativePath;
+            }
+
+            return normalizedPath;
+        }
+
+        public static string ResolvePortablePath(string path, string rootPath)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return path;
+
+            var trimmedPath = path.Trim();
+            if (Uri.TryCreate(trimmedPath, UriKind.Absolute, out var uri))
+            {
+                if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+                    return uri.AbsoluteUri;
+
+                if (uri.IsFile)
+                    trimmedPath = uri.LocalPath;
+            }
+
+            var normalizedRoot = NormalizePath(rootPath);
+            if (string.IsNullOrWhiteSpace(normalizedRoot))
+                return NormalizePath(trimmedPath);
+
+            if (!System.IO.Path.IsPathRooted(trimmedPath))
+                return NormalizePath(System.IO.Path.Combine(normalizedRoot, trimmedPath.Replace('/', System.IO.Path.DirectorySeparatorChar)));
+
+            var normalizedPath = NormalizePath(trimmedPath);
+            if (System.IO.File.Exists(normalizedPath) || System.IO.Directory.Exists(normalizedPath))
+                return normalizedPath;
+
+            var remappedPath = TryRemapLegacyPath(normalizedPath, normalizedRoot);
+            return string.IsNullOrWhiteSpace(remappedPath) ? normalizedPath : remappedPath;
+        }
+
+        public static string MakePortableRepositorySource(string source, string rootPath)
+        {
+            if (string.IsNullOrWhiteSpace(source))
+                return source;
+
+            var trimmedSource = source.Trim();
+            if (Uri.TryCreate(trimmedSource, UriKind.Absolute, out var uri))
+            {
+                if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+                    return uri.AbsoluteUri.TrimEnd('/');
+
+                if (uri.IsFile)
+                    trimmedSource = uri.LocalPath;
+            }
+
+            return MakePortablePath(trimmedSource, rootPath);
+        }
+
+        public static string ResolvePortableRepositorySource(string source, string rootPath)
+        {
+            if (string.IsNullOrWhiteSpace(source))
+                return source;
+
+            var trimmedSource = source.Trim();
+            if (Uri.TryCreate(trimmedSource, UriKind.Absolute, out var uri))
+            {
+                if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+                    return uri.AbsoluteUri.TrimEnd('/');
+
+                if (uri.IsFile)
+                    trimmedSource = uri.LocalPath;
+            }
+
+            return ResolvePortablePath(trimmedSource, rootPath);
+        }
+
+        private static string TryMakeRelativePath(string rootPath, string path)
+        {
+            if (string.IsNullOrWhiteSpace(rootPath) || string.IsNullOrWhiteSpace(path))
+                return string.Empty;
+
+            var normalizedRoot = NormalizePath(rootPath).TrimEnd(System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar);
+            var normalizedPath = NormalizePath(path);
+            if (string.IsNullOrWhiteSpace(normalizedRoot) || string.IsNullOrWhiteSpace(normalizedPath))
+                return string.Empty;
+
+            var rootPrefix = normalizedRoot + System.IO.Path.DirectorySeparatorChar;
+            if (!string.Equals(normalizedRoot, normalizedPath, StringComparison.OrdinalIgnoreCase)
+                && !normalizedPath.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Empty;
+            }
+
+            var relativePath = System.IO.Path.GetRelativePath(normalizedRoot, normalizedPath);
+            if (relativePath == ".")
+                return System.IO.Path.GetFileName(normalizedPath);
+
+            return relativePath;
+        }
+
+        private static string TryRemapLegacyPath(string path, string rootPath)
+        {
+            var pathSegments = GetPathSegments(path);
+            var rootSegments = GetPathSegments(rootPath);
+            if (pathSegments.Count == 0 || rootSegments.Count == 0)
+                return string.Empty;
+
+            var suffixLength = Math.Min(3, rootSegments.Count);
+            var rootSuffix = rootSegments.Skip(rootSegments.Count - suffixLength).ToArray();
+            if (rootSuffix.Length == 0)
+                return string.Empty;
+
+            for (var i = 0; i <= pathSegments.Count - suffixLength; i++)
+            {
+                var matches = true;
+                for (var j = 0; j < suffixLength; j++)
+                {
+                    if (!string.Equals(pathSegments[i + j], rootSuffix[j], StringComparison.OrdinalIgnoreCase))
+                    {
+                        matches = false;
+                        break;
+                    }
+                }
+
+                if (!matches)
+                    continue;
+
+                var remainder = pathSegments.Skip(i + suffixLength).ToArray();
+                if (remainder.Length == 0)
+                    return rootPath;
+
+                return System.IO.Path.Combine(new[] { rootPath }.Concat(remainder).ToArray());
+            }
+
+            return string.Empty;
+        }
+
+        private static List<string> GetPathSegments(string path)
+        {
+            var normalizedPath = NormalizePath(path);
+            if (string.IsNullOrWhiteSpace(normalizedPath))
+                return new List<string>();
+
+            var pathRoot = System.IO.Path.GetPathRoot(normalizedPath);
+            if (!string.IsNullOrWhiteSpace(pathRoot) && normalizedPath.StartsWith(pathRoot, StringComparison.OrdinalIgnoreCase))
+                normalizedPath = normalizedPath.Substring(pathRoot.Length);
+
+            return normalizedPath
+                .Split(new[] { System.IO.Path.DirectorySeparatorChar, System.IO.Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries)
+                .ToList();
+        }
+
+        private static string NormalizePath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return string.Empty;
+
+            try
+            {
+                return System.IO.Path.GetFullPath(path);
+            }
+            catch
+            {
+                return path.Trim();
+            }
+        }
+
         public static void PairUiSidecars(Folder folder)
         {
             if (folder == null)

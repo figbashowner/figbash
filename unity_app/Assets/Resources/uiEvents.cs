@@ -726,6 +726,8 @@ public class uiEvents : MonoBehaviour
                 PromptDialog.ShowAlert(GetRootOwner(), "Load figure failed", "The selected figure file could not be read.");
                 return;
             }
+
+            NormalizeLoadedFigurePaths(output);
             if (!await EnsureFigureRepositoriesLoadedAsync(output))
                 return;
 
@@ -884,7 +886,13 @@ public class uiEvents : MonoBehaviour
             lastFileName = Path.GetFileNameWithoutExtension(path);
             FileInfo fileInfo = new FileInfo(path);
             previousFolder = fileInfo.DirectoryName;
-            var exportFile =  new ExportFile() { children = getExports().ToArray() };
+            var exportFile = new ExportFile()
+            {
+                children = getExports()
+                    .Select(CreatePortableExportChild)
+                    .Where(child => child != null)
+                    .ToArray()
+            };
             var output = JsonUtility.ToJson(exportFile);
             File.WriteAllText(path, output);
         }
@@ -908,6 +916,52 @@ public class uiEvents : MonoBehaviour
             return a1.Name.CompareTo(a2.Name);
         });
         return exports.Select(stl => stl.Export()).ToList();
+    }
+
+    private static void NormalizeLoadedFigurePaths(ExportFile exportFile)
+    {
+        if (exportFile?.children != null)
+        {
+            foreach (var child in exportFile.children)
+            {
+                if (child == null)
+                    continue;
+
+                child.FullPath = Utils.ResolvePortablePath(child.FullPath, folderRoot);
+                child.ClearToApplyFullPath = Utils.ResolvePortablePath(child.ClearToApplyFullPath, folderRoot);
+                child.RepositorySource = Utils.ResolvePortableRepositorySource(child.RepositorySource, folderRoot);
+                child.ClearRepositorySource = Utils.ResolvePortableRepositorySource(child.ClearRepositorySource, folderRoot);
+            }
+        }
+
+        if (exportFile?.cutConfigs == null)
+            return;
+
+        foreach (var cutConfig in exportFile.cutConfigs)
+        {
+            if (cutConfig == null)
+                continue;
+
+            cutConfig.CutsFileFullPath = Utils.ResolvePortablePath(cutConfig.CutsFileFullPath, folderRoot);
+            cutConfig.OutputFileFullPath = Utils.ResolvePortablePath(cutConfig.OutputFileFullPath, folderRoot);
+        }
+    }
+
+    private static BareMinimumStlFile CreatePortableExportChild(BareMinimumStlFile child)
+    {
+        if (child == null)
+            return null;
+
+        return new BareMinimumStlFile()
+        {
+            FullPath = Utils.MakePortablePath(child.FullPath, folderRoot),
+            ClearToApplyFullPath = Utils.MakePortablePath(child.ClearToApplyFullPath, folderRoot),
+            RepositorySource = Utils.MakePortableRepositorySource(child.RepositorySource, folderRoot),
+            ClearRepositorySource = Utils.MakePortableRepositorySource(child.ClearRepositorySource, folderRoot),
+            transforms = child.transforms,
+            IsImport = child.IsImport,
+            OriginalSize = child.OriginalSize,
+        };
     }
 
     

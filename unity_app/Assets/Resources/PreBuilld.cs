@@ -56,7 +56,7 @@ class MyCustomBuildProcessor : IPreprocessBuildWithReport
     {
         var sourceFiles = "../blender_source_files";
         var streamingAssets = Application.streamingAssetsPath;
-        string[] blendFiles = new string[] { "100.clear.blend", "200.head.blend", "300.torso.blend", "400.legs.blend", "base.blend" };
+        string[] blendFiles = new string[] { "100.clear.blend", "base.blend" };
         foreach (var f in blendFiles)
         {
             copyIfNewer(Path.Combine(sourceFiles, f), Path.Combine(streamingAssets, f));

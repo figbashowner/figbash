@@ -1,7 +1,7 @@
 """Build a repository catalog JSON from a folder tree.
 
 Usage:
-    python jsonBuilder.py ROOT_DIR [REPOSITORY_NAME] [-o CATALOG_PATH]
+    python create_repo_catalog.py ROOT_DIR [REPOSITORY_NAME] [-o CATALOG_PATH]
 
 The generated JSON mirrors the Unity Folder/StlFile tree structure:
 - folders are preserved recursively
