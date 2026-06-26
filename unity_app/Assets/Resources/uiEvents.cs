@@ -219,8 +219,8 @@ public class uiEvents : MonoBehaviour
         Directory.CreateDirectory(folderRoot);
         await RunInBackground(() =>
         {
-            ExportStlsFromBlender(folderRoot, addLogFromBg);
-        }, "Rebuilding object cache");
+            CopyBundledStlsFromStreamingAssets(folderRoot, addLogFromBg);
+        }, "Seeding object cache");
         Directory.CreateDirectory(tempClearsPath);
 
         DataManager.Instance.Load(folderRoot);

@@ -155,9 +155,6 @@ def _get_script_args(argv):
     else:
         args = args[1:]
 
-    if args and args[0] == "exportAll":
-        args = args[1:]
-
     return args
 
 

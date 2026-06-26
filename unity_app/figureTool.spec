@@ -11,7 +11,7 @@ datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 a = Analysis(
-    ['..\\blender_module_loading\\figureTool.py'],
+    ['C:\\Users\\User\\Desktop\\figbashrepo\\blender_module_loading\\figureTool.py'],
     pathex=[],
     binaries=binaries,
     datas=datas,

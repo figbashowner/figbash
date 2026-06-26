@@ -55,13 +55,14 @@ public class stlImport : MonoBehaviour
     }
 //    private static List<string> hiddenFiles = new List<string>() { "base.stl", "cuts_0.16.stl", "cuts_0.20.stl", "cuts_0.25.stl", "cuts_0.30.stl", "cuts_0.35.stl" };
 
-    public static void ExportStlsFromBlender(string outputFullPath, Action<string> logCallback)
+    public static void CopyBundledStlsFromStreamingAssets(string outputFullPath, Action<string> logCallback)
     {
-        executeExportAllScript($"\"{Application.streamingAssetsPath}\" \"{outputFullPath}\"", logCallback);
-        foreach (var file in DataManager.hiddenFiles)
-        {
-            File.Copy(Path.Combine(Application.streamingAssetsPath, file), Path.Combine(outputFullPath, file), true);
-        }
+        var sourceRoot = Application.streamingAssetsPath;
+        if (string.IsNullOrWhiteSpace(sourceRoot) || Directory.Exists(sourceRoot) == false)
+            throw new DirectoryNotFoundException($"StreamingAssets folder not found: {sourceRoot}");
+
+        Directory.CreateDirectory(outputFullPath);
+        CopyBundledStlFiles(sourceRoot, outputFullPath, logCallback);
     }
     private static void executeApplyClearScript(string args, Action<string> logCallback)
     {
@@ -85,10 +86,22 @@ public class stlImport : MonoBehaviour
         string fullPath = Path.Combine(Application.streamingAssetsPath, "figureTool.exe");
         executeProcess(fullPath, "combineAllJson " + args, logCallback);
     }
-    private static void executeExportAllScript(string args, Action<string> logCallback)
+    private static void CopyBundledStlFiles(string sourceRoot, string destinationRoot, Action<string> logCallback)
     {
-        string fullPath = Path.Combine(Application.streamingAssetsPath, "figureTool.exe");
-        executeProcess(fullPath, "exportAll " + args, logCallback);
+        foreach (var file in Directory.EnumerateFiles(sourceRoot, "*", SearchOption.AllDirectories))
+        {
+            if (!file.EndsWith(".stl", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var relativePath = Path.GetRelativePath(sourceRoot, file);
+            var destinationPath = Path.Combine(destinationRoot, relativePath);
+            var destinationDirectory = Path.GetDirectoryName(destinationPath);
+            if (!string.IsNullOrWhiteSpace(destinationDirectory))
+                Directory.CreateDirectory(destinationDirectory);
+
+            File.Copy(file, destinationPath, true);
+            logCallback?.Invoke($"copying {relativePath}");
+        }
     }
     private static void executeProcess(string fullPath, string args, Action<string> logCallback)
     {

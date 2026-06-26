@@ -11,6 +11,39 @@ class MyCustomBuildProcessor : IPreprocessBuildWithReport
 {
     public int callbackOrder { get { return 0; } }
 
+    private static string GetRepoRoot()
+    {
+        return Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
+    }
+
+    private static void RunPythonExport(string exportScript, string sourceDir, string outputDir)
+    {
+        var startInfo = new ProcessStartInfo("py")
+        {
+            Arguments = $"-3.13 \"{exportScript}\" \"{sourceDir}\" \"{outputDir}\"",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            WorkingDirectory = GetRepoRoot(),
+        };
+
+        try
+        {
+            UnityEngine.Debug.Log($"starting process py {startInfo.Arguments}");
+            var process = Process.Start(startInfo);
+            if (process == null)
+                throw new Exception("Failed to start Python export process: py");
+
+            process.WaitForExit();
+            if (process.ExitCode != 0)
+                throw new Exception($"Python export exited with code {process.ExitCode}");
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogError(ex.ToString());
+            throw new BuildFailedException($"Failed to export bundled STLs with Python: {ex.Message}");
+        }
+    }
+
     private bool checkIfNewer(string sourceFile, string destinationFile)
     {
         var fiSource = new FileInfo(sourceFile);
@@ -54,8 +87,11 @@ class MyCustomBuildProcessor : IPreprocessBuildWithReport
     }
     public void OnPreprocessBuild(BuildReport report)
     {
-        var sourceFiles = "../blender_source_files";
+        var repoRoot = GetRepoRoot();
+        var sourceFiles = Path.Combine(repoRoot, "blender_source_files");
         var streamingAssets = Application.streamingAssetsPath;
+        var blenderExportScript = Path.Combine(repoRoot, "repo_utils", "blender_export.py");
+
         string[] blendFiles = new string[] { "100.clear.blend", "base.blend" };
         foreach (var f in blendFiles)
         {
@@ -67,7 +103,9 @@ class MyCustomBuildProcessor : IPreprocessBuildWithReport
             File.Copy(Path.Combine(sourceFiles, f), Path.Combine(streamingAssets, f), true);
         }
 
-        var pythonFiles = "../blender_module_loading";
+        RunPythonExport(blenderExportScript, sourceFiles, streamingAssets);
+
+        var pythonFiles = Path.Combine(repoRoot, "blender_module_loading");
 
         string[] pyscripts = new string[] { "figureTool.py"};
         foreach (var f in pyscripts)
