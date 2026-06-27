@@ -175,6 +175,18 @@
 
 .transform-trio {
     margin-bottom: 10px;
+    min-height: 0;
+}
+
+.transforms-shell {
+    min-height: 0;
+    overflow: hidden;
+}
+
+#TransformTrioScrollView {
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
 }
 
 .transform-fields {
@@ -565,6 +577,8 @@ EnumField,
     padding-top: 4px;
     padding-bottom: 4px;
     color: rgb(230, 236, 243);
+    --unity-cursor-color: rgb(230, 236, 243);
+    --unity-selection-color: rgba(51, 187, 187, 0.24);
 }
 
 DropdownField,
@@ -716,6 +730,8 @@ Label {
 #description {
     color: rgb(194, 205, 216);
     margin-bottom: 8px;
+    white-space: normal;
+    flex-shrink: 1;
 }
 
 Toggle {

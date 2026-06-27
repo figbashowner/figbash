@@ -3,7 +3,7 @@
         <engine:Columns>
             <engine:Column name="name" title="Name" width="40%" binding-path="Name" />
             <engine:Column name="modifier" title="Modifier" width="40%" stretchable="true" />
-            <engine:Column name="remove" title="Remove" width="20%" />
+            <engine:Column name="remove" title="Action" width="20%" />
         </engine:Columns>
     </engine:MultiColumnListView>
 </engine:UXML>

@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Unity.VisualScripting;
@@ -64,6 +65,166 @@ public class stlImport : MonoBehaviour
         Directory.CreateDirectory(outputFullPath);
         CopyBundledStlFiles(sourceRoot, outputFullPath, logCallback);
     }
+
+    public static string CopyImportedStlToDataFolder(string sourcePath)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath))
+            return sourcePath;
+
+        var normalizedSourcePath = Path.GetFullPath(sourcePath);
+        if (!File.Exists(normalizedSourcePath))
+            return normalizedSourcePath;
+
+        if (string.IsNullOrWhiteSpace(uiEvents.folderRoot))
+            throw new InvalidOperationException("The data folder has not been initialized yet.");
+
+        var importsRoot = Path.Combine(uiEvents.folderRoot, "imports");
+        Directory.CreateDirectory(importsRoot);
+
+        var destinationPath = GetImportedDestinationPath(importsRoot, normalizedSourcePath);
+        CopyFileIfNeeded(normalizedSourcePath, destinationPath);
+
+        var sourceUiPath = GetUiSidecarPath(normalizedSourcePath);
+        if (!string.IsNullOrWhiteSpace(sourceUiPath) && File.Exists(sourceUiPath))
+        {
+            var destinationUiPath = GetUiSidecarPath(destinationPath);
+            CopyFileIfNeeded(sourceUiPath, destinationUiPath);
+        }
+
+        return destinationPath;
+    }
+
+    public static bool TryLoadImportState(string importPath, out BareMinimumStlFile state)
+    {
+        state = null;
+
+        var statePath = GetImportStatePath(importPath);
+        if (string.IsNullOrWhiteSpace(statePath) || !File.Exists(statePath))
+            return false;
+
+        try
+        {
+            var exportFile = JsonUtility.FromJson<ExportFile>(File.ReadAllText(statePath));
+            var child = exportFile?.children?.FirstOrDefault(item => item != null);
+            if (child == null)
+                return false;
+
+            ResolvePortableChild(child);
+            state = child;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogWarning(ex);
+            return false;
+        }
+    }
+
+    public static void SaveImportState(StlFile stlFile)
+    {
+        if (stlFile == null || !stlFile.IsImport || stlFile.Transforms == null)
+            return;
+
+        try
+        {
+            var statePath = GetImportStatePath(stlFile.FullPath);
+            if (string.IsNullOrWhiteSpace(statePath))
+                return;
+
+            var exportFile = new ExportFile()
+            {
+                children = new[] { CreatePortableImportChild(stlFile) }
+            };
+
+            var stateDirectory = Path.GetDirectoryName(statePath);
+            if (!string.IsNullOrWhiteSpace(stateDirectory))
+                Directory.CreateDirectory(stateDirectory);
+
+            File.WriteAllText(statePath, JsonUtility.ToJson(exportFile));
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogWarning(ex);
+        }
+    }
+
+    private static string GetImportStatePath(string importPath)
+    {
+        if (string.IsNullOrWhiteSpace(importPath))
+            return string.Empty;
+
+        return Path.ChangeExtension(Path.GetFullPath(importPath), ".json");
+    }
+
+    private static BareMinimumStlFile CreatePortableImportChild(StlFile stlFile)
+    {
+        var child = stlFile.Export(preferUiPath: true);
+        child.FullPath = Utils.MakePortablePath(child.FullPath, uiEvents.folderRoot);
+        child.ClearToApplyFullPath = Utils.MakePortablePath(child.ClearToApplyFullPath, uiEvents.folderRoot);
+        child.RepositorySource = Utils.MakePortableRepositorySource(child.RepositorySource, uiEvents.folderRoot);
+        child.ClearRepositorySource = Utils.MakePortableRepositorySource(child.ClearRepositorySource, uiEvents.folderRoot);
+        return child;
+    }
+
+    private static void ResolvePortableChild(BareMinimumStlFile child)
+    {
+        if (child == null)
+            return;
+
+        child.FullPath = Utils.ResolvePortablePath(child.FullPath, uiEvents.folderRoot);
+        child.ClearToApplyFullPath = Utils.ResolvePortablePath(child.ClearToApplyFullPath, uiEvents.folderRoot);
+        child.RepositorySource = Utils.ResolvePortableRepositorySource(child.RepositorySource, uiEvents.folderRoot);
+        child.ClearRepositorySource = Utils.ResolvePortableRepositorySource(child.ClearRepositorySource, uiEvents.folderRoot);
+    }
+
+    private static string GetImportedDestinationPath(string importsRoot, string sourcePath)
+    {
+        var fileName = Path.GetFileName(sourcePath);
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new InvalidDataException($"Could not determine a file name for {sourcePath}");
+
+        var hash = ComputeSourcePathHash(sourcePath);
+        if (fileName.EndsWith(".ui.stl", StringComparison.OrdinalIgnoreCase))
+        {
+            var baseName = fileName.Substring(0, fileName.Length - ".ui.stl".Length);
+            return Path.Combine(importsRoot, $"{baseName}_{hash}.ui.stl");
+        }
+
+        var stem = Path.GetFileNameWithoutExtension(fileName);
+        var extension = Path.GetExtension(fileName);
+        return Path.Combine(importsRoot, $"{stem}_{hash}{extension}");
+    }
+
+    private static string ComputeSourcePathHash(string sourcePath)
+    {
+        using (var sha256 = SHA256.Create())
+        {
+            var bytes = Encoding.UTF8.GetBytes(Path.GetFullPath(sourcePath));
+            var hash = sha256.ComputeHash(bytes);
+            return BitConverter.ToString(hash).Replace("-", "").Substring(0, 12).ToLowerInvariant();
+        }
+    }
+
+    private static void CopyFileIfNeeded(string sourcePath, string destinationPath)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || string.IsNullOrWhiteSpace(destinationPath))
+            return;
+
+        var normalizedSource = Path.GetFullPath(sourcePath);
+        var normalizedDestination = Path.GetFullPath(destinationPath);
+        if (string.Equals(normalizedSource, normalizedDestination, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        var destinationDirectory = Path.GetDirectoryName(normalizedDestination);
+        if (!string.IsNullOrWhiteSpace(destinationDirectory))
+            Directory.CreateDirectory(destinationDirectory);
+
+        if (!ShouldCopyFile(normalizedSource, normalizedDestination))
+            return;
+
+        File.Copy(normalizedSource, normalizedDestination, true);
+    }
+
     private static void executeApplyClearScript(string args, Action<string> logCallback)
     {
         string fullPath = Path.Combine(Application.streamingAssetsPath, "figureTool.exe");

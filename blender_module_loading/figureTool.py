@@ -93,7 +93,7 @@ def handle_one_json_child(stlfile, combining = False, keep = False):
 
     if "transforms" in stlfile and "Rotations" in stlfile["transforms"] and len(stlfile["transforms"]["Rotations"]) > 0:
         bpy.ops.transform.rotate(value=math.radians(stlfile["transforms"]["Rotations"][1]), orient_axis='Z')
-        bpy.ops.transform.rotate(value=math.radians(stlfile["transforms"]["Rotations"][2]), orient_axis='X')
+        bpy.ops.transform.rotate(value=math.radians(stlfile["transforms"]["Rotations"][2] * -1), orient_axis='X')
         bpy.ops.transform.rotate(value=math.radians(stlfile["transforms"]["Rotations"][0] * -1), orient_axis='Y')
         apply_all_transforms(obj_base)
 

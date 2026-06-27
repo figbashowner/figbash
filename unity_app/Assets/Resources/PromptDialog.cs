@@ -79,6 +79,7 @@ public partial class PromptDialog : VisualElement
         _descriptionLabel = this.Q<Label>("PromptDialogDescription");
         _inputText = this.Q<TextField>("PromptDialogInput");
         _buttonRow = this.Q<VisualElement>("PromptDialogButtonRow");
+        UiInputCaptureState.TrackTextInput(_inputText);
     }
 
     private void BuildFallback()
@@ -99,6 +100,7 @@ public partial class PromptDialog : VisualElement
         _inputText = new TextField();
         _inputText.AddToClassList("repo-dialog__input");
         _inputText.style.display = DisplayStyle.None;
+        UiInputCaptureState.TrackTextInput(_inputText);
 
         _buttonRow = new VisualElement();
         _buttonRow.AddToClassList("repo-dialog__button-row");

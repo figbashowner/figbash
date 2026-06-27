@@ -659,22 +659,24 @@ namespace Assets
             {
                 current.Transforms = stl.Transforms;
                 Utils.UpdatePositionRelativeToOriginalSize(current);
+                stlImport.SaveImportState(current);
                 NotifiyAppliedChanged();
             }
             else
             {
                 ApplyObject(stl, true);
                 Utils.UpdatePositionRelativeToOriginalSize(stl);
+                stlImport.SaveImportState(stl);
             }
         }
 
         public void ApplyObject(StlFile item, bool notifyChanges = true)
         {
-            StlFile current = AllApplied.FirstOrDefault(a => a.FullPath == item.FullPath);
-            if (item.IsImport)
-            {
-                current = AllApplied.FirstOrDefault(a => a.Guid == item.Guid);
-            }
+            if (item == null)
+                return;
+
+            StlFile current = AllApplied.FirstOrDefault(a =>
+                PathsEqual(a?.FullPath, item?.FullPath) || a.Guid == item.Guid);
             if (current == null)
             {
                 AllApplied.Add(item);
@@ -682,6 +684,11 @@ namespace Assets
                                                 a1.Name == "base.stl" ? -1
                                                                         : (a2.Name == "base.stl" ? 1
                                                                                                  : a1.Name.CompareTo(a2.Name)));
+            }
+
+            if (item.IsImport && item.Transforms != null)
+            {
+                stlImport.SaveImportState(current ?? item);
             }
 
             if (current == null || item.Transforms != null)
@@ -694,7 +701,11 @@ namespace Assets
 
         public void RemoveObject(StlFile item, bool notifyChanges = true)
         {
-            var current = AllApplied.FirstOrDefault(a => a.FullPath == item.FullPath || a.Guid == item.Guid);
+            if (item == null)
+                return;
+
+            var current = AllApplied.FirstOrDefault(a =>
+                PathsEqual(a?.FullPath, item?.FullPath) || a.Guid == item.Guid);
             if (current != null)
             {
                 AllApplied.Remove(current);
