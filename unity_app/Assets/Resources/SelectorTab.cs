@@ -80,7 +80,21 @@ namespace Assets
             var item = evt.currentTarget as Button;
             if (item != null)
             {
-                DataManager.Instance.ApplyObject(item.userData as StlFile);
+                var stl = item.userData as StlFile;
+                if (stl == null)
+                    return;
+
+                if (string.IsNullOrWhiteSpace(filter) && stlImport.TryLoadImportState(stl.FullPath, out var savedState) && savedState != null)
+                {
+                    stl.Transforms = savedState.transforms;
+                    stl.originalSize = savedState.OriginalSize;
+                    stl.ClearToApply = savedState.ClearToApplyFullPath;
+                    stl.RepositorySource = savedState.RepositorySource;
+                    stl.ClearRepositorySource = savedState.ClearRepositorySource;
+                    stl.IsImport = true;
+                }
+
+                DataManager.Instance.ApplyObject(stl);
             }
         }
 

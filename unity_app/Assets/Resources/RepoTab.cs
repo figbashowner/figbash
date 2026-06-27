@@ -696,20 +696,10 @@ namespace Assets
         {
             _builtInRepositoryEntries.Clear();
 
-            var sampleLocalRepoPath = GetSampleLocalRepoPath();
-            if (!string.IsNullOrWhiteSpace(sampleLocalRepoPath) && Directory.Exists(sampleLocalRepoPath))
-            {
-                _builtInRepositoryEntries.Add(new BuiltInRepositoryEntry
-                {
-                    Name = "Sample Local Repo",
-                    Source = NormalizeRepoSource(sampleLocalRepoPath),
-                });
-            }
-
             _builtInRepositoryEntries.Add(new BuiltInRepositoryEntry
             {
-                Name = "Sample HTTP Repo",
-                Source = NormalizeRepoSource("http://127.0.0.1:8000/"),
+                Name = "figbash-street",
+                Source = NormalizeRepoSource("http://figbashowner.github.io/figbash-street/"),
             });
         }
 
