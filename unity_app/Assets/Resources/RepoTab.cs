@@ -109,6 +109,7 @@ namespace Assets
 
             try
             {
+                await UniTask.Yield();
                 LoadManifestEntries();
                 RefreshRepoListView();
 
@@ -123,10 +124,9 @@ namespace Assets
                     var loadedEntry = await ImportRepositoryAsync(entry.Source, owner, selectAllAfterSuccess: false);
                     if (loadedEntry == null)
                         continue;
-
                     manifestChanged |= UpsertRepositoryEntry(loadedEntry);
-                    RefreshRepoListView();
                 }
+                RefreshRepoListView();
 
                 if (manifestChanged)
                     SaveManifestEntries();
@@ -289,7 +289,7 @@ namespace Assets
             return await ImportLocalRepositoryAsync(source, owner, selectAllAfterSuccess);
         }
 
-        private UniTask<RepositoryEntry> ImportLocalRepositoryAsync(string directory, VisualElement owner, bool selectAllAfterSuccess)
+        private async UniTask<RepositoryEntry> ImportLocalRepositoryAsync(string directory, VisualElement owner, bool selectAllAfterSuccess)
         {
             var normalizedSource = NormalizeRepoSource(directory);
             var catalogPath = Path.Combine(directory, "catalog.json");
@@ -297,37 +297,41 @@ namespace Assets
             if (!File.Exists(catalogPath))
             {
                 PromptDialog.ShowAlert(owner, "Repository not found", $"Could not find catalog.json in repository folder:\n{directory}");
-                return UniTask.FromResult<RepositoryEntry>(null);
+                return null;
             }
 
             try
             {
-                var catalogText = File.ReadAllText(catalogPath);
-                var catalog = JsonConvert.DeserializeObject<Folder>(catalogText);
-                if (catalog == null)
+                var entry = await UniTask.RunOnThreadPool(() =>
                 {
-                    PromptDialog.ShowAlert(owner, "Repository not found", $"Repository catalog at {catalogPath} was empty or invalid.");
-                    return UniTask.FromResult<RepositoryEntry>(null);
-                }
+                    var catalogText = File.ReadAllText(catalogPath);
+                    var catalog = JsonConvert.DeserializeObject<Folder>(catalogText);
+                    if (catalog == null)
+                        throw new InvalidDataException($"Repository catalog at {catalogPath} was empty or invalid.");
 
-                ResolveCatalogPaths(catalog, directory);
-                Utils.PairUiSidecars(catalog);
-                DataManager.Instance.AddRepo(catalog, normalizedSource);
+                    ResolveCatalogPaths(catalog, directory);
+                    Utils.PairUiSidecars(catalog);
+                    DataManager.Instance.AddRepo(catalog, normalizedSource, notifyDataChanged: false);
+
+                    return new RepositoryEntry
+                    {
+                        Name = GetRepositoryDisplayName(catalog, normalizedSource),
+                        Source = normalizedSource,
+                    };
+                });
+
+                DataManager.Instance.NotifyDataChanged();
 
                 if (selectAllAfterSuccess)
                     SelectAllTab(owner);
 
-                return UniTask.FromResult(new RepositoryEntry
-                {
-                    Name = GetRepositoryDisplayName(catalog, normalizedSource),
-                    Source = normalizedSource,
-                });
+                return entry;
             }
             catch (Exception ex)
             {
                 PromptDialog.ShowAlert(owner, "Repository import failed", ex.Message);
                 Debug.LogWarning(ex);
-                return UniTask.FromResult<RepositoryEntry>(null);
+                return null;
             }
         }
 
@@ -351,21 +355,27 @@ namespace Assets
                 var cacheRoot = GetRepoCacheRoot(baseSource);
                 Directory.CreateDirectory(cacheRoot);
                 File.WriteAllText(Path.Combine(cacheRoot, "catalog.json"), catalogText);
-                ResolveCatalogPaths(catalog, cacheRoot);
-                Utils.PairUiSidecars(catalog);
-
                 var downloadRequests = BuildRepositoryPreviewDownloadRequests(new Uri(baseSource), catalog, cacheRoot);
-                var downloadResult = await DownloadManager.DownloadAsync(downloadRequests, "Downloading repository previews");
-                if (!downloadResult.Success)
-                {
-                    ShowDownloadFailure(owner, "Repository download failed", downloadResult);
-                    return null;
-                }
 
-                DataManager.Instance.AddRepo(catalog, baseSource);
+                await UniTask.RunOnThreadPool(() =>
+                {
+                    ResolveCatalogPaths(catalog, cacheRoot);
+                    Utils.PairUiSidecars(catalog);
+                    DataManager.Instance.AddRepo(catalog, baseSource, notifyDataChanged: false);
+                });
+
+                DataManager.Instance.NotifyDataChanged();
 
                 if (selectAllAfterSuccess)
                     SelectAllTab(owner);
+
+                if (downloadRequests.Count > 0)
+                {
+                    DownloadManager.DownloadAsync(
+                        downloadRequests,
+                        "Downloading repository previews",
+                        onFailure: result => ShowDownloadFailure(GetRootOwner(), "Repository download failed", result));
+                }
 
                 return new RepositoryEntry
                 {
@@ -446,22 +456,31 @@ namespace Assets
                 if (file.Name.EndsWith(".ui.stl", StringComparison.OrdinalIgnoreCase))
                     continue;
 
+                var regularRelativePath = GetRepositoryRelativePath(file.FullPath);
+                if (string.IsNullOrWhiteSpace(regularRelativePath))
+                    continue;
+
+                var regularLocalPath = GetCachePath(cacheRoot, regularRelativePath);
+
                 if (!string.IsNullOrWhiteSpace(file.UiName))
                 {
-                    var uiLocalPath = Utils.GetUiSidecarPath(file.FullPath);
-                    if (string.IsNullOrWhiteSpace(uiLocalPath))
+                    var uiRelativePath = GetRepositoryRelativePath(Utils.GetUiSidecarPath(file.FullPath));
+                    if (string.IsNullOrWhiteSpace(uiRelativePath))
                         continue;
 
-                    var uiRelativePath = Path.GetRelativePath(cacheRoot, uiLocalPath).Replace('\\', '/');
-                    requests.Add(new DownloadRequest(baseUri, uiRelativePath, uiLocalPath, file.UiHash));
+                    var uiLocalPath = GetCachePath(cacheRoot, uiRelativePath);
+                    requests.Add(new DownloadRequest(
+                        baseUri,
+                        uiRelativePath,
+                        uiLocalPath,
+                        file.UiHash,
+                        regularRelativePath,
+                        regularLocalPath,
+                        file.Hash));
                     continue;
                 }
 
-                if (string.IsNullOrWhiteSpace(file.FullPath))
-                    continue;
-
-                var regularRelativePath = Path.GetRelativePath(cacheRoot, file.FullPath).Replace('\\', '/');
-                requests.Add(new DownloadRequest(baseUri, regularRelativePath, file.FullPath, file.Hash));
+                requests.Add(new DownloadRequest(baseUri, regularRelativePath, regularLocalPath, file.Hash));
             }
         }
 
@@ -525,6 +544,43 @@ namespace Assets
                     file.FullPath = Path.GetFullPath(Path.Combine(rootPath, file.FullPath.Replace('/', Path.DirectorySeparatorChar)));
                 }
             }
+        }
+
+        private static string GetRepositoryRelativePath(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return string.Empty;
+
+            var normalizedPath = path.Trim().Replace('\\', '/');
+            while (normalizedPath.StartsWith("./", StringComparison.Ordinal))
+            {
+                normalizedPath = normalizedPath.Substring(2);
+            }
+
+            while (normalizedPath.StartsWith("/", StringComparison.Ordinal))
+            {
+                normalizedPath = normalizedPath.Substring(1);
+            }
+
+            if (!Path.IsPathRooted(path))
+                return normalizedPath;
+
+            var pathRoot = Path.GetPathRoot(path);
+            if (!string.IsNullOrWhiteSpace(pathRoot) && normalizedPath.StartsWith(pathRoot.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase))
+            {
+                normalizedPath = normalizedPath.Substring(pathRoot.Length).TrimStart('\\', '/').Replace('\\', '/');
+            }
+
+            return normalizedPath;
+        }
+
+        private static string GetCachePath(string cacheRoot, string relativePath)
+        {
+            if (string.IsNullOrWhiteSpace(cacheRoot) || string.IsNullOrWhiteSpace(relativePath))
+                return string.Empty;
+
+            var normalizedRelative = relativePath.Replace('/', Path.DirectorySeparatorChar).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return Path.GetFullPath(Path.Combine(cacheRoot, normalizedRelative));
         }
 
         private void ConfigureRepositoryList()

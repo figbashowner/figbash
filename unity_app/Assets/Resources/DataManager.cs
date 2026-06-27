@@ -334,7 +334,7 @@ namespace Assets
             AddRepo(catalogRoot, catalogRoot?.FullPath);
         }
 
-        public void AddRepo(Folder catalogRoot, string source)
+        public void AddRepo(Folder catalogRoot, string source, bool notifyDataChanged = true)
         {
             if (catalogRoot == null)
                 return;
@@ -374,6 +374,12 @@ namespace Assets
 
             AllClears.AddRange(GetClears(catalogRoot));
 
+            if (notifyDataChanged && OnDataChanged != null)
+                OnDataChanged();
+        }
+
+        internal void NotifyDataChanged()
+        {
             if (OnDataChanged != null)
                 OnDataChanged();
         }

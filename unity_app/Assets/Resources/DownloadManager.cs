@@ -12,23 +12,47 @@ namespace Assets
 {
     public sealed class DownloadRequest
     {
-        public DownloadRequest(Uri baseUri, string relativePath, string localPath, string expectedSha256 = null)
+        public DownloadRequest(
+            Uri baseUri,
+            string relativePath,
+            string localPath,
+            string expectedSha256 = null,
+            string fallbackRelativePath = null,
+            string fallbackLocalPath = null,
+            string fallbackExpectedSha256 = null)
         {
             BaseUri = baseUri;
             RelativePath = NormalizeRelativePath(relativePath);
             LocalPath = Path.GetFullPath(localPath);
             ExpectedSha256 = NormalizeHash(expectedSha256);
+            FallbackRelativePath = NormalizeRelativePath(fallbackRelativePath);
+            FallbackLocalPath = string.IsNullOrWhiteSpace(fallbackLocalPath) ? string.Empty : Path.GetFullPath(fallbackLocalPath);
+            FallbackExpectedSha256 = NormalizeHash(fallbackExpectedSha256);
         }
 
         public Uri BaseUri { get; }
         public string RelativePath { get; }
         public string LocalPath { get; }
         public string ExpectedSha256 { get; }
+        public string FallbackRelativePath { get; }
+        public string FallbackLocalPath { get; }
+        public string FallbackExpectedSha256 { get; }
+        public bool HasFallback => !string.IsNullOrWhiteSpace(FallbackRelativePath) && !string.IsNullOrWhiteSpace(FallbackLocalPath);
 
         public string DisplayName =>
             string.IsNullOrWhiteSpace(RelativePath)
                 ? Path.GetFileName(LocalPath)
                 : RelativePath;
+
+        public bool TryGetFallbackRequest(out DownloadRequest request)
+        {
+            request = null;
+            if (!HasFallback)
+                return false;
+
+            request = new DownloadRequest(BaseUri, FallbackRelativePath, FallbackLocalPath, FallbackExpectedSha256);
+            return true;
+        }
 
         private static string NormalizeRelativePath(string path)
         {
@@ -98,18 +122,69 @@ namespace Assets
 
         public static event Action<DownloadProgressState> ProgressChanged;
 
-        public static async UniTask<DownloadBatchResult> DownloadAsync(IEnumerable<DownloadRequest> requests, string label)
+        private sealed class DownloadException : Exception
         {
-            var cleanedRequests = NormalizeRequests(requests);
-            if (cleanedRequests.Count == 0)
+            public DownloadException(Uri fileUri, long responseCode, string error)
+                : base($"Failed to download {fileUri}: {error}")
             {
-                PublishProgress(DownloadProgressState.Hidden());
-                return new DownloadBatchResult(0, 0, Array.Empty<DownloadFailure>());
+                ResponseCode = responseCode;
             }
 
+            public long ResponseCode { get; }
+        }
+
+        public static void DownloadAsync(
+            IEnumerable<DownloadRequest> requests,
+            string label,
+            Action<DownloadBatchResult> onSuccess = null,
+            Action<DownloadBatchResult> onFailure = null)
+        {
+            DownloadAsyncInternal(requests, label, onSuccess, onFailure).Forget();
+        }
+
+        private static async UniTask DownloadAsyncInternal(
+            IEnumerable<DownloadRequest> requests,
+            string label,
+            Action<DownloadBatchResult> onSuccess,
+            Action<DownloadBatchResult> onFailure)
+        {
+            DownloadBatchResult result;
+            try
+            {
+                //result = new DownloadBatchResult(0, 0, new List<DownloadFailure>());
+                result = await DownloadAsyncCore(requests, label);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                result = new DownloadBatchResult(0, 0, new[] { new DownloadFailure(string.Empty, ex.Message) });
+            }
+
+            try
+            {
+                if (result.Success)
+                    onSuccess?.Invoke(result);
+                else
+                    onFailure?.Invoke(result);
+            }
+            catch (Exception callbackEx)
+            {
+                Debug.LogException(callbackEx);
+            }
+        }
+
+        private static async UniTask<DownloadBatchResult> DownloadAsyncCore(IEnumerable<DownloadRequest> requests, string label)
+        {
             await _batchGate.WaitAsync();
             try
             {
+                var cleanedRequests = await UniTask.RunOnThreadPool(() => NormalizeRequests(requests));
+                if (cleanedRequests.Count == 0)
+                {
+                    PublishProgress(DownloadProgressState.Hidden());
+                    return new DownloadBatchResult(0, 0, Array.Empty<DownloadFailure>());
+                }
+
                 var completed = 0;
                 var failures = new List<DownloadFailure>();
                 var progressLabel = string.IsNullOrWhiteSpace(label) ? "Downloading" : label;
@@ -117,15 +192,16 @@ namespace Assets
                 PublishProgress(new DownloadProgressState(progressLabel, completed, cleanedRequests.Count));
 
                 var tasks = cleanedRequests
-                    .Select(request => DownloadOneAsync(request, failures, () =>
-                    {
-                        completed++;
-                        PublishProgress(new DownloadProgressState(progressLabel, completed, cleanedRequests.Count));
-                    }))
-                    .ToArray();
+                .Select(request => DownloadOneAsync(request, failures, () =>
+                {
+                    completed++;
+                    PublishProgress(new DownloadProgressState(progressLabel, completed, cleanedRequests.Count));
+                }))
+                .ToArray();
 
                 await UniTask.WhenAll(tasks);
                 PublishProgress(DownloadProgressState.Hidden());
+
                 return new DownloadBatchResult(cleanedRequests.Count, completed, failures);
             }
             finally
@@ -148,7 +224,14 @@ namespace Assets
                     continue;
 
                 var localPath = Path.GetFullPath(request.LocalPath);
-                var normalizedRequest = new DownloadRequest(request.BaseUri, request.RelativePath, localPath, request.ExpectedSha256);
+                var normalizedRequest = new DownloadRequest(
+                    request.BaseUri,
+                    request.RelativePath,
+                    localPath,
+                    request.ExpectedSha256,
+                    request.FallbackRelativePath,
+                    request.FallbackLocalPath,
+                    request.FallbackExpectedSha256);
 
                 if (File.Exists(localPath))
                 {
@@ -173,68 +256,101 @@ namespace Assets
             await _downloadGate.WaitAsync();
             try
             {
-                if (File.Exists(request.LocalPath))
-                {
-                    if (string.IsNullOrWhiteSpace(request.ExpectedSha256) || HashMatches(request.LocalPath, request.ExpectedSha256))
-                        return;
-
-                    TryDelete(request.LocalPath);
-                }
-
-                if (request.BaseUri == null)
-                    throw new InvalidOperationException($"No source URI is available for {request.LocalPath}");
-
-                var localDirectory = Path.GetDirectoryName(request.LocalPath);
-                if (!string.IsNullOrWhiteSpace(localDirectory))
-                    Directory.CreateDirectory(localDirectory);
-
-                var fileUri = new Uri(request.BaseUri, request.RelativePath);
-                using (var www = UnityWebRequest.Get(fileUri.AbsoluteUri))
-                {
-                    var downloadHandler = new DownloadHandlerFile(request.LocalPath);
-                    downloadHandler.removeFileOnAbort = true;
-                    www.downloadHandler = downloadHandler;
-
-                    www.SendWebRequest();
-                    while (!www.isDone)
-                    {
-                        await UniTask.Yield();
-                    }
-
-                    if (www.result != UnityWebRequest.Result.Success)
-                        throw new Exception($"Failed to download {fileUri}: {www.error}");
-
-                    if (!string.IsNullOrWhiteSpace(request.ExpectedSha256)
-                        && !HashMatches(request.LocalPath, request.ExpectedSha256))
-                    {
-                        throw new Exception($"Downloaded file hash mismatch for {fileUri}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
                 try
                 {
-                    if (File.Exists(request.LocalPath))
-                        File.Delete(request.LocalPath);
+                    await DownloadOneCoreAsync(request);
+                    return;
                 }
-                catch
+                catch (Exception firstFailure)
                 {
-                    // Ignore cleanup failures.
-                }
+                    if (TryBuildFallbackRequest(request, firstFailure, out var fallbackRequest))
+                    {
+                        TryDelete(request.LocalPath);
 
-                lock (failures)
-                {
-                    failures.Add(new DownloadFailure(request.LocalPath, ex.Message));
-                }
+                        try
+                        {
+                            await DownloadOneCoreAsync(fallbackRequest);
+                            return;
+                        }
+                        catch (Exception fallbackFailure)
+                        {
+                            request = fallbackRequest;
+                            TryDelete(request.LocalPath);
+                            firstFailure = fallbackFailure;
+                        }
+                    }
 
-                Debug.LogWarning(ex);
+                    TryDelete(request.LocalPath);
+
+                    lock (failures)
+                    {
+                        failures.Add(new DownloadFailure(request.LocalPath, firstFailure.Message));
+                    }
+
+                    Debug.LogWarning(firstFailure);
+                }
             }
             finally
             {
                 onFinished?.Invoke();
                 _downloadGate.Release();
             }
+        }
+
+        private static async UniTask DownloadOneCoreAsync(DownloadRequest request)
+        {
+            if (File.Exists(request.LocalPath))
+            {
+                if (string.IsNullOrWhiteSpace(request.ExpectedSha256) || HashMatches(request.LocalPath, request.ExpectedSha256))
+                    return;
+
+                TryDelete(request.LocalPath);
+            }
+
+            if (request.BaseUri == null)
+                throw new InvalidOperationException($"No source URI is available for {request.LocalPath}");
+
+            var localDirectory = Path.GetDirectoryName(request.LocalPath);
+            if (!string.IsNullOrWhiteSpace(localDirectory))
+                Directory.CreateDirectory(localDirectory);
+
+            var fileUri = new Uri(request.BaseUri, request.RelativePath);
+            using (var www = UnityWebRequest.Get(fileUri.AbsoluteUri))
+            {
+                var downloadHandler = new DownloadHandlerFile(request.LocalPath);
+                downloadHandler.removeFileOnAbort = true;
+                www.downloadHandler = downloadHandler;
+
+                await www.SendWebRequest();
+                /*while (!www.isDone)
+                {
+                    await UniTask.Yield();
+                }*/
+
+                if (www.result != UnityWebRequest.Result.Success)
+                    throw new DownloadException(fileUri, www.responseCode, www.error);
+
+                if (!string.IsNullOrWhiteSpace(request.ExpectedSha256)
+                    && !HashMatches(request.LocalPath, request.ExpectedSha256))
+                {
+                    throw new Exception($"Downloaded file hash mismatch for {fileUri}");
+                }
+            }
+        }
+
+        private static bool TryBuildFallbackRequest(DownloadRequest request, Exception failure, out DownloadRequest fallbackRequest)
+        {
+            fallbackRequest = null;
+            if (request == null || failure == null)
+                return false;
+
+            if (!request.RelativePath.EndsWith(".ui.stl", StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            if (failure is not DownloadException downloadException || downloadException.ResponseCode != 404)
+                return false;
+
+            return request.TryGetFallbackRequest(out fallbackRequest);
         }
 
         private static bool HashMatches(string localPath, string expectedSha256)

@@ -496,7 +496,14 @@ public class uiEvents : MonoBehaviour
         if (requests.Count == 0)
             return true;
 
-        var result = await DownloadManager.DownloadAsync(requests, "Downloading figure assets");
+        var completion = new UniTaskCompletionSource<DownloadBatchResult>();
+        DownloadManager.DownloadAsync(
+            requests,
+            "Downloading figure assets",
+            onSuccess: result => completion.TrySetResult(result),
+            onFailure: result => completion.TrySetResult(result));
+
+        var result = await completion.Task;
         if (!result.Success)
         {
             ShowDownloadFailure("Figure download failed", result);

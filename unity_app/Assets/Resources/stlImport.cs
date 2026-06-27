@@ -99,9 +99,31 @@ public class stlImport : MonoBehaviour
             if (!string.IsNullOrWhiteSpace(destinationDirectory))
                 Directory.CreateDirectory(destinationDirectory);
 
+            if (!ShouldCopyFile(file, destinationPath))
+                continue;
+
             File.Copy(file, destinationPath, true);
             logCallback?.Invoke($"copying {relativePath}");
         }
+    }
+
+    private static bool ShouldCopyFile(string sourcePath, string destinationPath)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath) || string.IsNullOrWhiteSpace(destinationPath))
+            return false;
+
+        var sourceInfo = new FileInfo(sourcePath);
+        if (!sourceInfo.Exists)
+            return false;
+
+        var destinationInfo = new FileInfo(destinationPath);
+        if (!destinationInfo.Exists)
+            return true;
+
+        if (sourceInfo.Length != destinationInfo.Length)
+            return true;
+
+        return sourceInfo.LastWriteTimeUtc > destinationInfo.LastWriteTimeUtc;
     }
     private static void executeProcess(string fullPath, string args, Action<string> logCallback)
     {
