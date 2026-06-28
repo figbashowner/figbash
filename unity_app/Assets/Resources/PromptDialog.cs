@@ -5,6 +5,7 @@ using UnityEngine.UIElements;
 [UxmlElement]
 public partial class PromptDialog : VisualElement
 {
+    private const string WelcomeDialogPreferenceKey = "FigBash.ShowWelcomeDialog";
     private static VisualTreeAsset _template;
 
     private VisualElement _card;
@@ -277,6 +278,65 @@ public partial class PromptDialog : VisualElement
         var okButton = new Button(() => window.Close(owner)) { text = pOkButton };
         window.AddButtons(okButton);
         AttachWindow(owner, window);
+    }
+
+    public static void ShowOrientation(VisualElement owner)
+    {
+        if (!ShouldShowOrientation())
+            return;
+
+        var window = CreateWindow();
+
+        window.SetTitle("Welcome to FigBash.");
+        window.SetDescription("FigBash is a system of 3d parts that can combine to create your own custom action figure.");
+        window.SetInput(string.Empty, false);
+
+        Action close = () => window.Close(owner);
+
+        var continueButton = new Button(() =>
+        {
+            close();
+        })
+        {
+            text = "OK"
+        };
+
+        var dontShowAgainButton = new Button(() =>
+        {
+            SetShowOrientation(false);
+            close();
+        })
+        {
+            text = "Don't show this again"
+        };
+
+        window.AddButtons(continueButton, dontShowAgainButton);
+
+        window.RegisterCallback<KeyUpEvent>(e =>
+        {
+            if (e.keyCode == KeyCode.Escape)
+            {
+                close();
+            }
+
+            if (e.keyCode == KeyCode.Return || e.keyCode == KeyCode.KeypadEnter)
+            {
+                close();
+            }
+        });
+
+        AttachWindow(owner, window);
+    }
+
+    public static bool ShouldShowOrientation()
+    {
+        return PlayerPrefs.GetInt(WelcomeDialogPreferenceKey, 1) != 0;
+    }
+
+    private static void SetShowOrientation(bool show)
+    {
+        PlayerPrefs.SetInt(WelcomeDialogPreferenceKey, show ? 1 : 0);
+        PlayerPrefs.Save();
     }
 
     private void Close(VisualElement owner)

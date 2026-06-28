@@ -277,6 +277,7 @@ public class uiEvents : MonoBehaviour
         DataManager.Instance.OnAppliedChanged += OnAppliedChanged;
 
         ZoomCameraToTarget(CameraTarget.Full);
+        PromptDialog.ShowOrientation(root);
 
         if (_repoTab != null)
             await _repoTab.LoadSavedRepositoriesAsync();

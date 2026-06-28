@@ -16,6 +16,9 @@ namespace Assets
     [UxmlElement]
     public partial class RepoTab : VisualElement
     {
+        private const string DefaultBuiltInRepositoryName = "figbash-street";
+        private const string DefaultBuiltInRepositorySource = "http://figbashowner.github.io/figbash-street/";
+
         [Serializable]
         private sealed class RepositoryEntry
         {
@@ -114,7 +117,12 @@ namespace Assets
                 RefreshRepoListView();
 
                 if (_repositoryEntries.Count == 0)
+                {
+                    var defaultLoaded = await EnsureRepositoryLoadedAsync(DefaultBuiltInRepositorySource);
+                    if (defaultLoaded)
+                        RefreshRepoListView();
                     return;
+                }
 
                 var owner = GetRootOwner();
                 var manifestChanged = false;
@@ -235,7 +243,26 @@ namespace Assets
                 return true;
 
             if (DataManager.Instance.HasRepositorySource(normalizedSource))
+            {
+                var existingSummary = DataManager.Instance.GetRepositorySummaries()
+                    .FirstOrDefault(summary => SourcesMatch(summary?.Source, normalizedSource));
+
+                if (existingSummary != null)
+                {
+                    if (UpsertRepositoryEntry(new RepositoryEntry()
+                    {
+                        Name = existingSummary.Name,
+                        Source = existingSummary.Source,
+                    }))
+                    {
+                        SaveManifestEntries();
+                    }
+
+                    RefreshRepoListView();
+                }
+
                 return true;
+            }
 
             var entry = await ImportRepositoryAsync(normalizedSource, GetRootOwner(), selectAllAfterSuccess: false);
             if (entry == null)
@@ -698,8 +725,8 @@ namespace Assets
 
             _builtInRepositoryEntries.Add(new BuiltInRepositoryEntry
             {
-                Name = "figbash-street",
-                Source = NormalizeRepoSource("http://figbashowner.github.io/figbash-street/"),
+                Name = DefaultBuiltInRepositoryName,
+                Source = NormalizeRepoSource(DefaultBuiltInRepositorySource),
             });
         }
 
